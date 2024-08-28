@@ -15,7 +15,8 @@
     "vue-router": "^4.4.3",
     "sass": "^1.66.1",
     "sass-loader": "^13.3.2",
-    "vuedraggable": "4.1.0"
+    "vuedraggable": "4.1.0",
+    "dayjs": "^1.11.10"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.1.2",

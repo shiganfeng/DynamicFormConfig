@@ -20,6 +20,7 @@ import {
     Alert,
     Tooltip,
     Pagination,
+    ConfigProvider
 } from "ant-design-vue";
 
 export default {
@@ -45,5 +46,6 @@ export default {
         app.use(Alert);
         app.use(Tooltip);
         app.use(Pagination);
+        app.use(ConfigProvider);
     }
 }
