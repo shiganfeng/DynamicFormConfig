@@ -5,9 +5,14 @@ const routes = [
     {
         path: "/",
         name: "layout",
-        redirect: { name: 'calendar' },
+        redirect: { name: 'functionMenu' },
         component: () => import("../views/layout/layout.vue"),
         children: [
+            {
+                path: "functionMenu",
+                name: "functionMenu",
+                component: () => import("../views/layout/functionMenu/functionMenu.vue"),
+            },
             {
                 path: "formConfig",
                 name: "formConfig",
@@ -22,6 +27,11 @@ const routes = [
                 path: "question",
                 name: "question",
                 component: () => import("../views/layout/question/question.vue"),
+            },
+            {
+                path: "questionConfig",
+                name: "questionConfig",
+                component: () => import("../views/layout/questionConfig/questionConfig.vue"),
             }
         ]
     }

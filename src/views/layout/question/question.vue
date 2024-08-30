@@ -1,167 +1,102 @@
 <template>
     <div class="question">
         <div class="formCon">
-            <a-form
-                ref="formRef"
-                :model="formState"
-                :rules="formRules"
-            >
-                <template
-                    v-for="item in formFields"
-                >
-                    <a-form-item
-                        v-if="checkCondition(item)"
-                        :key="item.model"
-                        :label="item.label"
-                        :name="item.model"
-                    >
-                        <component
-                            :is="item.type"
-                            :value="formState[item.model]"
-                            :options="item.options"
-                            @update:value="(value) => updateValue(value, item.model)"
-                        ></component>
-                    </a-form-item>
-                </template>
-            </a-form>
+            <VQuestionGroup
+                v-for="group in formStruct.groups"
+                :key="group.groupKey"
+                :group="group"
+                :computeFormState="computeFormState"
+                :formItemIsShowMap="formItemIsShowMap"
+                @updateOriginValue="updateOriginValue"
+            ></VQuestionGroup>
         </div>
         <div class="bottom">
             <a-button type="primary" @click="onSubmit">提交</a-button>
+            <a-button type="primary" @click="goFormConfig">表单配置</a-button>
         </div>
     </div>
 </template>
 
 <script>
-import {defineComponent, ref, computed} from "vue";
+import {defineComponent, ref, computed, watch} from "vue";
+import { mockData,defaultConditionValueMap, computeIsShowFormItem } from "../questionConfig/mockData.js";
 import VInput from "./components/VInput.vue";
 import VCheckbox from "./components/VCheckbox.vue";
 import VRadio from "./components/VRadio.vue";
+import VDateTime from "./components/VDateTime.vue";
+import VSingleSelect from "./components/VSingleSelect.vue";
+import VMultipleSelect from "./components/VMultipleSelect.vue";
+import VSwitch from "./components/VSwitch.vue";
 import {message} from "ant-design-vue";
+import {useRouter} from "vue-router";
+import VQuestionGroup from "./components/VQuestionGroup/VQuestionGroup.vue";
 export default defineComponent({
     components: {
         VInput,
         VCheckbox,
-        VRadio
+        VRadio,
+        VDateTime,
+        VSingleSelect,
+        VMultipleSelect,
+        VSwitch,
+        VQuestionGroup
     },
     setup() {
+        const router = useRouter();
         const formChunk = (() => {
-            const formWidth = ref({
-                labelCol: { span: 2 },
-                wrapperCol: { span: 13 },
-            })
             const formRef = ref(null);
-            // 表单配置结构（写死的数据，假如有配置页面，最后返回出来的数据该是这种结构）
-            const formFields = ref([
-                {
-                    label: '编程语言',
-                    type: 'VRadio',
-                    model: 'language',
-                    required: true,
-                    message: '不为空',
-                    condition: { // 动态显示：选择这个表单的某一项的特定值的时候才显示
-                        model: '', // 字段名
-                        value: '', // 这个字段的值
-                    },
-                    options: [
-                        {
-                            label: 'JavaScript',
-                            code: 'JavaScript'
-                        },
-                        {
-                            label: 'Python',
-                            code: 'Python'
-                        },
-                        {
-                            label: 'Java',
-                            code: 'Java'
-                        },
-                    ]
-                },
-                {
-                    label: '擅长的前端框架',
-                    type: 'VCheckbox',
-                    model: 'frameworks',
-                    required: true,
-                    message: '不为空',
-                    condition: { // 动态显示：选择这个表单的某一项的特定值的时候才显示
-                        model: '',
-                        value: ''
-                    },
-                    options:[
-                        {
-                            label: 'Vue',
-                            code: 'Vue'
-                        },
-                        {
-                            label: 'React',
-                            code: 'React'
-                        },
-                        {
-                            label: 'Angular',
-                            code: 'Angular'
-                        }
-                    ]
-                },
-                {
-                    label: '编程语言的值为JavaScript时才显示',
-                    type: 'VInput',
-                    model:'opinion',
-                    required: false,
-                    message: '不为空',
-                    condition: { // 动态显示：选择这个表单的某一项的特定值的时候才显示
-                        model: 'language',
-                        value: 'JavaScript'
-                    },
-                    options: []
-                },
-                {
-                    label: '擅长的前端框架的值为[Vue, React]时才显示',
-                    type: 'VInput',
-                    model:'tip',
-                    required: true,
-                    message: '不为空',
-                    condition: { // 动态显示：选择这个表单的某一项的特定值的时候才显示
-                        model: 'frameworks',
-                        value: ['Vue', 'React']
-                    },
-                    options: []
-                },
-            ]);
-            // 表单绑定数据
-            const formState = ref({});
-            // 动态设置属性
-            formFields.value.forEach(item => {
-                formState.value[item.model] = item.type === 'VCheckbox' ? [] : '';
-            })
-            // 表单校验规则
-            const formRules = computed(() => {
-                const rules = {};
-                formFields.value.forEach(item => {
-                    rules[item.model] = {
-                        required: item.required,
-                        message: item.message,
-                        trigger: 'change'
-                    };
+            // 后端存储的表单数据
+            const formData = ref([]);
+            // 后端存储的表单结构
+            const formStruct = ref({});
+            // 表单显示的数据
+            const computeFormState = computed(() => {
+                const obj = {};
+                formData.value.forEach(item => {
+                    obj[item.formItemKey] = item;
+                    // 不知道为啥就好了
+                    void item.value;
                 });
-                return rules;
+                console.log('computeFormState:', obj);
+                return obj;
             });
-            const updateValue = (value, property) => {
-                formState.value[property] = value;
-                console.log(formState.value);
-            }
-            // 检查表单项的的显示条件
-            const checkCondition = (item) => {
-                const { condition: {
-                    model,
-                    value
-                } } = item;
-                console.log()
-                if (!model) return true;
-                if (typeof value === 'string') {
-                    return formState.value[model] === value;
-                } else if (Array.isArray(value)) {
-                    return value.length === formState.value[model].length && value.every(item => formState.value[model].includes(item));
+            // 表单项是否显示的Map
+            const formItemIsShowMap = computed(() => {
+                console.log('computeIsShowFormItem11111', computeIsShowFormItem(formStruct.value, computeFormState.value).formItemIsShowMap);
+                return computeIsShowFormItem(formStruct.value, computeFormState.value).formItemIsShowMap;
+            });
+            
+            const queryFomStruct = async () => {
+                formStruct.value = await new Promise((resolve) => {
+                    resolve(JSON.parse(JSON.stringify(mockData)));
+                });
+                console.log('formStruct', formStruct.value);
+            };
+            const queryFormData = async () => {
+                const res = await new Promise((resolve) => {
+                    resolve(JSON.parse(JSON.stringify(mockData)));
+                });
+                if (res) {
+                    const arr = [];
+                    // 平铺所有的表单项
+                    res.groups.forEach(group => {
+                        group.formItems.forEach(formItem => {
+                            arr.push({
+                                formItemKey: formItem.formItemKey,
+                                value: defaultConditionValueMap[formItem.type], // 初始化value值，不同组件类型绑定值类型不一样
+                            });
+                        })
+                    });
+                    formData.value = arr;
+                    console.log('formData', formData.value);
+                    console.log('computeFormState', computeFormState.value);
                 }
+            };
+            const updateOriginValue = (formItemKey, value) => {
+                // 对象引用
+                computeFormState.value[formItemKey].value = value;
+                console.log('computeFormState, ____', computeFormState.value);
+                console.log('computeFormState, ++++', formData.value);
             }
             const onSubmit = () => {
                 formRef.value.validate().then(() => {
@@ -170,31 +105,43 @@ export default defineComponent({
                     message.error('提交失败!');
                 })
             }
+            const goFormConfig = () => {
+                router.push({
+                    name: 'questionConfig'
+                });
+            }
             
             return {
-                formFields,
-                formState,
-                formRules,
+                computeFormState,
+                formItemIsShowMap,
                 formRef,
-                formWidth,
+                formData,
+                formStruct,
                 
-                updateValue,
-                checkCondition,
-                onSubmit
+                onSubmit,
+                goFormConfig,
+                queryFormData,
+                queryFomStruct,
+                updateOriginValue,
+                
+                
             }
         })();
+        formChunk.queryFormData();
+        formChunk.queryFomStruct();
         
         
         return {
-            formFields: formChunk.formFields,
-            formState: formChunk.formState,
-            formRules: formChunk.formRules,
+            computeFormState: formChunk.computeFormState,
+            formItemIsShowMap: formChunk.formItemIsShowMap,
             formRef: formChunk.formRef,
-            formWidth: formChunk.formWidth,
+            formData: formChunk.formData,
+            formStruct: formChunk.formStruct,
             
-            updateValue: formChunk.updateValue,
-            checkCondition: formChunk.checkCondition,
             onSubmit: formChunk.onSubmit,
+            goFormConfig: formChunk.goFormConfig,
+            updateOriginValue: formChunk.updateOriginValue,
+            
         }
     }
 })
@@ -212,12 +159,15 @@ export default defineComponent({
         width: 100%;
         height: 0;
         flex: 1 0 auto;
+        display: flex;
+        flex-direction: column;
     }
     &>.bottom {
         width: 100%;
         display: flex;
         justify-content: center;
         align-items: center;
+        gap: 16px;
     }
 }
 </style>

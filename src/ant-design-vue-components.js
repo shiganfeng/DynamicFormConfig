@@ -20,7 +20,9 @@ import {
     Alert,
     Tooltip,
     Pagination,
-    ConfigProvider
+    ConfigProvider,
+    Space,
+    Divider
 } from "ant-design-vue";
 
 export default {
@@ -47,5 +49,7 @@ export default {
         app.use(Tooltip);
         app.use(Pagination);
         app.use(ConfigProvider);
+        app.use(Space);
+        app.use(Divider);
     }
 }
