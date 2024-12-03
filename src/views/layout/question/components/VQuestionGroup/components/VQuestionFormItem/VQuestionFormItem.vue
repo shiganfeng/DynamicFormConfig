@@ -37,10 +37,6 @@ export default defineComponent({
             type: Object,
             default: () => ({})
         },
-        formItemIsShowMap: {
-            type: Map,
-            default: () => (new Map())
-        },
         formItem: {
             type: Object,
             default: () => ({

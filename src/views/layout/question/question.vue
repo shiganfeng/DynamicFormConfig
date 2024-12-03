@@ -18,8 +18,8 @@
 </template>
 
 <script>
-import {defineComponent, ref, computed, watch} from "vue";
-import { mockData,defaultConditionValueMap, computeIsShowFormItem } from "../questionConfig/mockData.js";
+import {defineComponent, ref, computed} from "vue";
+import { mockData,defaultConditionValueMap, computeIsShowFormItem, createFormItemMap } from "../questionConfig/mockData.js";
 import VInput from "./components/VInput.vue";
 import VCheckbox from "./components/VCheckbox.vue";
 import VRadio from "./components/VRadio.vue";
@@ -48,7 +48,14 @@ export default defineComponent({
             // 后端存储的表单数据
             const formData = ref([]);
             // 后端存储的表单结构
-            const formStruct = ref({});
+            const formStruct = ref({
+                groups: []
+            });
+            // 后端存储的表单结构映射的表单项的Map
+            const formOptionsGroups = computed(() => {
+                return createFormItemMap(formStruct.value);
+            })
+            console.log('formOptionsGroups:', formOptionsGroups.value);
             // 表单显示的数据
             const computeFormState = computed(() => {
                 const obj = {};
@@ -57,13 +64,12 @@ export default defineComponent({
                     // 不知道为啥就好了
                     void item.value;
                 });
-                console.log('computeFormState:', obj);
                 return obj;
             });
             // 表单项是否显示的Map
             const formItemIsShowMap = computed(() => {
-                console.log('computeIsShowFormItem11111', computeIsShowFormItem(formStruct.value, computeFormState.value).formItemIsShowMap);
-                return computeIsShowFormItem(formStruct.value, computeFormState.value).formItemIsShowMap;
+                console.log('formItemIsShowMap1111:', computeIsShowFormItem(formStruct.value, computeFormState.value, formOptionsGroups.value.formItemTypeMap).formItemIsShowMap)
+                return computeIsShowFormItem(formStruct.value, computeFormState.value, formOptionsGroups.value.formItemTypeMap).formItemIsShowMap;
             });
             
             const queryFomStruct = async () => {

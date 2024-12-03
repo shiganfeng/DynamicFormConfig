@@ -2,17 +2,39 @@
     <div class="VFormItem">
         <div class="top">
             <div class="item">
-                <div class="label">标题：</div>
-                <div class="con">
+                <a-form-item
+                    label="标题"
+                    :name="[...formItemIndexes, 'label']"
+                    :rules="[{ required: true }]"
+                >
                     <a-input
                         :value="label"
                         @update:value="labelChange"
+                        placeholder="请输入"
                     ></a-input>
-                </div>
+                </a-form-item>
             </div>
             <div class="item">
-                <div class="label">组件类型：</div>
-                <div class="con">
+                <a-form-item
+                    label="项的提取code(可用做提取业务)"
+                    :name="[...formItemIndexes, 'formItemCode']"
+                    :rules="formItemCodeRule"
+                >
+                    <a-input
+                        :value="formItemCode"
+                        @update:value="formItemCodeChange"
+                        placeholder="请输入"
+                    ></a-input>
+                </a-form-item>
+            </div>
+        </div>
+        <div class="top">
+            <div class="item">
+                <a-form-item
+                    label="组件类型"
+                    :name="[...formItemIndexes, 'type']"
+                    :rules="[{ required: true }]"
+                >
                     <a-select
                         :value="type"
                         placeholder="Please select"
@@ -24,32 +46,58 @@
                             :value="item.value"
                         >{{item.label}}</a-select-option>
                     </a-select>
-                </div>
+                </a-form-item>
             </div>
             <div class="item">
-                <div class="label">是否必填：</div>
-                <div class="con">
+                <a-form-item
+                    label="是否必填"
+                >
                     <a-switch
                         :checked="required"
                         @change="requiredChange"
                     ></a-switch>
-                </div>
+                </a-form-item>
             </div>
             <div class="item">
-                <div class="label">必填提示文字：</div>
-                <div class="con">
+                <a-form-item
+                    label="必填提示文字"
+                    :name="[...formItemIndexes, 'message']"
+                    :rules="messageRule"
+                >
                     <a-input
                         :value="message"
                         @update:value="messageChange"
+                        placeholder="请输入"
                     ></a-input>
-                </div>
+                </a-form-item>
+            </div>
+            <div class="item">
+                <a-form-item
+                    label="是否显示在表单中"
+                >
+                    <a-switch
+                        :checked="isShow"
+                        @change="isShowChange"
+                    ></a-switch>
+                </a-form-item>
+            </div>
+            <div class="item">
+                <a-form-item
+                    label="是否只是用来中转的中间项"
+                >
+                    <a-switch
+                        :checked="isMiddleUse"
+                        @change="isMiddleUseChange"
+                    ></a-switch>
+                </a-form-item>
             </div>
         </div>
         <div class="content">
-            <div class="line">
+            <div v-if="dynamicComponentType.includes(type)" class="line">
                 <div class="item">
-                    <div class="label">动态配置选择项（例如下拉单选，下拉多选，单选框，多选框）：</div>
-                    <div class="con">
+                    <a-form-item
+                        label="动态配置选择项（例如下拉单选，下拉多选，单选框，多选框）"
+                    >
                         <a-select
                             placeholder="自定义下拉选项"
                             style="width: 300px"
@@ -80,37 +128,45 @@
                                 </a-space>
                             </template>
                         </a-select>
-                    </div>
+                    </a-form-item>
                 </div>
             </div>
             <div class="lineGroup">
                 <div class="label">显示当前表单项的条件（例如其他的表单项选择了特定的值才显示）：</div>
                 <div class="lineCon">
                     <div class="top">
-                        <div class="label">选定项直接的条件关系：</div>
-                        <a-select
-                            :value="relation"
-                            placeholder="Please select"
-                            @update:value="relationChange"
+                        <a-form-item
+                            label="选定项直接的条件关系"
+                            :name="[...formItemIndexes, 'conditionStruct', 'relation']"
+                            :rules="[{ required: true }]"
                         >
-                            <a-select-option
-                                v-for="item in relationList"
-                                :key="item.value"
-                                :value="item.value"
-                            >{{item.label}}</a-select-option>
-                        </a-select>
+                            <a-select
+                                :value="relation"
+                                placeholder="Please select"
+                                @update:value="relationChange"
+                            >
+                                <a-select-option
+                                    v-for="item in relationList"
+                                    :key="item.value"
+                                    :value="item.value"
+                                >{{item.label}}</a-select-option>
+                            </a-select>
+                        </a-form-item>
                     </div>
                     <div
-                        v-for="conditionLine in formItem.conditionStruct.conditionList"
+                        v-for="(conditionLine, conditionLineIndex) in formItem.conditionStruct.conditionList"
                         :key="conditionLine.conditionKey"
                         class="line"
                     >
                         <div class="item">
-                            <div class="con">
+                            <a-form-item
+                                :label="`条件${conditionLineIndex + 1}`"
+                                :name="[...formItemIndexes, 'conditionStruct', 'conditionList', conditionLineIndex, 'model']"
+                                :rules="[{ required: true }]"
+                            >
                                 <a-select
                                     :value="conditionLine.model"
                                     style="width: 350px"
-                                    allow-clear
                                     @change="(value) => modelChange(conditionLine, value)"
                                 >
                                     <a-select-opt-group
@@ -128,22 +184,25 @@
                                         >{{selectFormItem.label}}</a-select-option>
                                     </a-select-opt-group>
                                 </a-select>
-                            </div>
+                            </a-form-item>
                         </div>
-                        <div v-if="conditionLine.model" class="item">
-                            <div class="label">选择了前面特定表单项的值：</div>
-                            <div class="con">
+                        <div v-if="conditionLine.model && !conditionLine.modelMiddleUse" class="item">
+                            <a-form-item
+                                label="选择了前面特定表单项的值"
+                                :name="[...formItemIndexes, 'conditionStruct', 'conditionList', conditionLineIndex, 'conditionValue']"
+                                :rules="[{ required: true }]"
+                            >
                                 <component
                                     :is="transFormType(conditionLine.model).type"
                                     :value="conditionLine.conditionValue"
                                     :options="transFormType(conditionLine.model).options"
                                     @update:value="(value) => conditionValueChange(conditionLine, value)"
                                 ></component>
-                            </div>
+                            </a-form-item>
                         </div>
-                        <a-button type="danger">删除</a-button>
+                        <a-button type="primary" danger @click="delConditionLine(conditionLineIndex)">删除</a-button>
                     </div>
-                    <a-button type="primary" @click="addFormStructLine">添加条件项</a-button>
+                    <a-button type="primary" @click="addConditionLine">添加条件项</a-button>
                 </div>
             </div>
         </div>
@@ -151,9 +210,9 @@
 </template>
 
 <script>
-import {defineComponent, ref} from "vue";
+import {computed, defineComponent, nextTick, ref} from "vue";
 import { PlusOutlined, CloseCircleOutlined } from '@ant-design/icons-vue';
-import { componentsList, createUniqueKey, defaultConditionValueMap, relationList } from "../../../../../../mockData.js";
+import { componentsList, createUniqueKey, defaultConditionValueMap, relationList, dynamicComponentType } from "../../../../../../mockData.js";
 import {message} from "ant-design-vue";
 import VInput from "../../../../../../../question/components/VInput.vue";
 import VCheckbox from "../../../../../../../question/components/VCheckbox.vue";
@@ -188,6 +247,15 @@ export default defineComponent({
         VSwitch,
     },
     props: {
+        allFormItemCodeArr: {
+            type: Array,
+            default: () => ([]),  
+        },
+        formItemIndexes: {
+            type: Array,
+            required: true,
+            default: () => ([]),
+        },
         formItemSelectArr: {
             type: Array,
             default: () => ([])
@@ -196,17 +264,16 @@ export default defineComponent({
             type: Map,
             default: () => (new Map())
         },
-        formItemIsShowMap: {
-            type: Map,
-            default: () => (new Map())
-        },
         formItem: {
             type: Object,
             default: () => ({
                 formItemKey: '', // 应该自动生成
+                code: '',
                 label: '', // 手动输入
                 type: '', // 下拉选择组件
                 required: true, // 校验是否必填
+                isShow: true, // 是否显示在表单中
+                isMiddleUse: false, // 是否只是用来中转的中间项
                 message: '', // 校验时候的信息
                 conditionStruct: {
                     relation: '&',
@@ -227,11 +294,23 @@ export default defineComponent({
             type: String,
             default: ''
         },
+        formItemCode: {
+            type: String,
+            default: ''
+        },
         type: {
             type: String,
             default: 'VInput'
         },
         required: {
+            type: Boolean,
+            default: false
+        },
+        isShow: {
+            type: Boolean,
+            default: true
+        },
+        isMiddleUse: {
             type: Boolean,
             default: false
         },
@@ -250,16 +329,20 @@ export default defineComponent({
     },
     emits: [
         'update:label',
+        'update:formItemCode',
         'update:type',
         'update:required',
+        'update:isShow',
+        'update:isMiddleUse',
         'update:message',
         'update:options',
         'update:relation',
         'addOptionItem',
         'deleteOptionItem',
-        'addFormStructLine',
+        'addConditionLine',
+        'delConditionLine',
         'modelChange',
-        'conditionValueChange'
+        'conditionValueChange',
     ],
     setup(props, ctx) {
         const transFormType = (model) => {
@@ -272,11 +355,20 @@ export default defineComponent({
             const labelChange = (value) => {
                 ctx.emit('update:label', value);
             };
+            const formItemCodeChange = (value) => {
+                ctx.emit('update:formItemCode', value);
+            };
             const typeChange = (value) => {
                 ctx.emit('update:type', value);
             };
             const requiredChange = (value) => {
                 ctx.emit('update:required', value);
+            }
+            const isShowChange = (value) => {
+                ctx.emit('update:isShow', value);
+            }
+            const isMiddleUseChange = (value) => {
+                ctx.emit('update:isMiddleUse', value);
             }
             const messageChange = (value) => {
                 ctx.emit('update:message', value);
@@ -311,13 +403,73 @@ export default defineComponent({
             const conditionValueChange = (conditionLine, value) => {
                 ctx.emit('conditionValueChange', conditionLine, value);
             }
-            const addFormStructLine = () => {
-                ctx.emit('addFormStructLine');
+            const addConditionLine = () => {
+                ctx.emit('addConditionLine');
             }
+            const delConditionLine = (conditionLineIndex) => {
+                ctx.emit('delConditionLine', conditionLineIndex);
+            }
+            // 要什么响应式的，因为props.required会变化
+            const messageRule = computed(() => {
+                return [
+                    {
+                        validator:  async (_rule, value) => {
+                            await nextTick();
+                            if(value !== 0) {
+                                value = (value || '').trim();
+                            }
+                            if (props.required && value === '') {
+                                return Promise.reject('是否必填选择必填时，文字不为空');
+                            }
+                        },
+                        required: props.required,
+                        trigger: ['change', 'blur'],
+                    }
+                ]
+            });
+            // 判断表单项code是否重复
+            const isDuplication = computed( () => {
+                console.log('allFormItemCodeArr3333:', props.allFormItemCodeArr);
+                let num = 0;
+                for(let i = 0; i < props.allFormItemCodeArr.length; i++) {
+                    console.log(7777, props.allFormItemCodeArr[i], props.formItemCode)
+                    if (props.allFormItemCodeArr[i] === props.formItemCode) {
+                        num++;
+                        if (num >= 2) {
+                            break;
+                        }
+                    }
+                }
+                console.log('num:', num)
+                return num >= 2;
+            })
+            const formItemCodeRule = [
+                {
+                    validator: async (_rule, value) => {
+                        // 等待 allFormItemCodeArr 赋值完成。
+                        await nextTick();
+                        if(value !== 0) {
+                            value = (value || '').trim();
+                        }
+                        if (value === '') {
+                            return Promise.reject('表单项code必填');
+                        } else {
+                            if (isDuplication.value) {
+                                return Promise.reject('表单项code不可以重复');
+                            }
+                        }
+                    },
+                    required: true,
+                    trigger: ['change', 'blur'],
+                }
+            ];
             return {
                 labelChange,
+                formItemCodeChange,
                 typeChange,
                 requiredChange,
+                isShowChange,
+                isMiddleUseChange,
                 messageChange,
                 optionsChange,
                 relationChange,
@@ -325,8 +477,11 @@ export default defineComponent({
                 conditionValueChange,
                 addOptionItem,
                 deleteOptionItem,
-                addFormStructLine,
-                addOptionItemLabel
+                addConditionLine,
+                delConditionLine,
+                addOptionItemLabel,
+                messageRule,
+                formItemCodeRule
             }
         })();
         
@@ -334,9 +489,13 @@ export default defineComponent({
             transFormType,
             componentsList,
             relationList,
+            dynamicComponentType,
             labelChange: formItemChunk.labelChange,
+            formItemCodeChange: formItemChunk.formItemCodeChange,
             typeChange: formItemChunk.typeChange,
             requiredChange: formItemChunk.requiredChange,
+            isShowChange: formItemChunk.isShowChange,
+            isMiddleUseChange: formItemChunk.isMiddleUseChange,
             messageChange: formItemChunk.messageChange,
             optionsChange: formItemChunk.optionsChange,
             relationChange: formItemChunk.relationChange,
@@ -344,8 +503,11 @@ export default defineComponent({
             conditionValueChange: formItemChunk.conditionValueChange,
             addOptionItem: formItemChunk.addOptionItem,
             deleteOptionItem: formItemChunk.deleteOptionItem,
-            addFormStructLine: formItemChunk.addFormStructLine,
+            addConditionLine: formItemChunk.addConditionLine,
+            delConditionLine: formItemChunk.delConditionLine,
             addOptionItemLabel: formItemChunk.addOptionItemLabel,
+            messageRule: formItemChunk.messageRule,
+            formItemCodeRule: formItemChunk.formItemCodeRule,
         }
     }
 })
@@ -374,18 +536,16 @@ export default defineComponent({
     &>.top {
         width: 100%;
         display: flex;
+        flex-wrap: wrap;
         gap: 32px;
-        margin-bottom: 16px;
         &>.item {
             display: flex;
             align-items: center;
-            &>.con {
-                &>.ant-input {
-                    width: 180px;
-                }
-                &>.ant-select {
-                    width: 180px;
-                }
+            .ant-input {
+                width: 180px;
+            }
+            .ant-select {
+                width: 180px;
             }
         }
     }
@@ -401,13 +561,11 @@ export default defineComponent({
             &>.item {
                 display: flex;
                 align-items: center;
-                &>.con {
-                    &>.ant-input {
-                        width: 180px;
-                    }
-                    &>.ant-select {
-                        width: 180px;
-                    }
+                .ant-input {
+                    width: 180px;
+                }
+                .ant-select {
+                    width: 180px;
                 }
             }
         }
@@ -432,10 +590,11 @@ export default defineComponent({
                     width: 100%;
                     display: flex;
                     gap: 16px;
-                    align-items: center;
+                    align-items: flex-start;
                     &>.item {
-                        display: flex;
-                        align-items: center;
+                        &>.ant-form-item {
+                            //margin-bottom: 0;
+                        }
                     }
                 }
             }

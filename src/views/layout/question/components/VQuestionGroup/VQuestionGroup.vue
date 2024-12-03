@@ -4,7 +4,7 @@
         <div class="content">
             <template v-for="formItem in group.formItems">
                 <VQuestionFormItem
-                    v-if="formItemIsShowMap.get(formItem.formItemKey)"
+                    v-if="formItemIsShowMap.get(formItem.formItemKey) && formItem.isShow"
                     :key="formItem.formItemKey"
                     :formItem="formItem"
                     :computeFormState="computeFormState"

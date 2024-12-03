@@ -73,6 +73,3 @@ function setup(){
 
     }
 }
-
-v-for=strcutItem in formStruct
-:value=formDataMap[strcutItem.formItemKey].value

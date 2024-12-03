@@ -1,24 +1,40 @@
 <template>
     <div class="VGroup">
         <div class="top">
-            <div class="title">{{group.groupName}}</div>
+            <a-form-item
+                label="分组名"
+                :name="[...formItemIndexes, 'groupName']"
+                :rules="[{ required: true }]"
+            >
+                <a-input
+                    :value="group.groupName"
+                    @update:value="groupNameChange"
+                    placeholder="请输入"
+                />
+            </a-form-item>
         </div>
         <VFormItem
-            v-for="formItem in group.formItems"
+            v-for="(formItem, formItemIndex) in group.formItems"
             :key="formItem.formItemKey"
             :formItem="formItem"
+            :formItemIndex="formItemIndex"
+            :formItemIndexes="[...formItemIndexes, 'formItems', formItemIndex]"
             :formItemSelectArr="formItemSelectArr"
             :formItemTypeMap="formItemTypeMap"
-            :formItemIsShowMap="formItemIsShowMap"
+            :allFormItemCodeArr="allFormItemCodeArr"
             v-model:label="formItem.label"
+            v-model:formItemCode="formItem.formItemCode"
             v-model:type="formItem.type"
             v-model:required="formItem.required"
+            v-model:isShow="formItem.isShow"
+            v-model:isMiddleUse="formItem.isMiddleUse"
             v-model:message="formItem.message"
             v-model:options="formItem.formItemStruct.options"
             v-model:relation="formItem.conditionStruct.relation"
             @addOptionItem="(optionItem) => addOptionItem(formItem, optionItem)"
             @deleteOptionItem="(itemIndex) => deleteOptionItem(formItem, itemIndex)"
-            @addFormStructLine="addFormStructLine(formItem)"
+            @addConditionLine="addConditionLine(formItem)"
+            @delConditionLine="(conditionLineIndex) => delConditionLine(formItem, conditionLineIndex)"
             @modelChange="modelChange"
             @conditionValueChange="conditionValueChange"
         ></VFormItem>
@@ -34,6 +50,23 @@ export default defineComponent({
         VFormItem
     },
     props: {
+        allFormItemCodeArr: {
+            type: Array,
+            default: () => ([]),
+        },
+        groupName: {
+            type: String,
+            default: ''
+        },
+        formItemIndexes: { // 触发表单验证的validate方法，属性必填
+            type: Array,
+            required: true,
+            default: () => ([]),
+        },
+        groupIndex: {
+            type: Number,
+            required: true
+        },
         group: {
             type: Object,
             default: () => ({
@@ -50,17 +83,16 @@ export default defineComponent({
             type: Map,
             default: () => (new Map())
         },
-        formItemIsShowMap: {
-            type: Map,
-            default: () => (new Map())
-        }
     },
     emits: [
         'addOptionItem',
         'deleteOptionItem',
-        'addFormStructLine',
+        'addConditionLine',
         'modelChange',
-        'conditionValueChange'
+        'conditionValueChange',
+        'groupNameChange',
+        'update:groupName',
+        'delConditionLine'
     ],
     setup(props, ctx) {
         const formGroupChunk = (() => {
@@ -70,8 +102,11 @@ export default defineComponent({
             const deleteOptionItem = (formItem, itemIndex) => {
                 ctx.emit('deleteOptionItem', formItem, itemIndex);
             }
-            const addFormStructLine = (formItem) => {
-                ctx.emit('addFormStructLine', formItem);
+            const addConditionLine = (formItem) => {
+                ctx.emit('addConditionLine', formItem);
+            };
+            const delConditionLine = (formItem, conditionLineIndex) => {
+                ctx.emit('delConditionLine', formItem, conditionLineIndex);
             };
             const modelChange = (conditionLine, value) => {
                 ctx.emit('modelChange', conditionLine, value);
@@ -79,21 +114,28 @@ export default defineComponent({
             const conditionValueChange = (conditionLine, value) => {
                 ctx.emit('conditionValueChange', conditionLine, value);
             }
+            const groupNameChange = (value) => {
+                ctx.emit('update:groupName', value);
+            }
             return {
                 addOptionItem,
                 deleteOptionItem,
-                addFormStructLine,
+                addConditionLine,
                 modelChange,
-                conditionValueChange
+                conditionValueChange,
+                groupNameChange,
+                delConditionLine,
             }
         })();
         
         return {
             addOptionItem: formGroupChunk.addOptionItem,
             deleteOptionItem: formGroupChunk.deleteOptionItem,
-            addFormStructLine: formGroupChunk.addFormStructLine,
+            addConditionLine: formGroupChunk.addConditionLine,
             modelChange: formGroupChunk.modelChange,
             conditionValueChange: formGroupChunk.conditionValueChange,
+            groupNameChange: formGroupChunk.groupNameChange,
+            delConditionLine: formGroupChunk.delConditionLine,
         }
     }
 })
@@ -111,11 +153,6 @@ export default defineComponent({
     &>.top {
         width: 100%;
         display: flex;
-        margin-bottom: 16px;
-        &>.title {
-            color: #9433FF;
-            font-weight: bold;
-        }
     }
 }
 </style>

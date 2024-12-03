@@ -2,13 +2,15 @@
     <div class="questionConfig">
         <div class="formCon">
             <VForm
+                ref="VFormRef"
                 :formStruct="formStruct"
-                :formItemSelectArr="formItemSelectArr"
-                :formItemTypeMap="formItemTypeMap"
-                :formItemIsShowMap="formItemIsShowMap"
+                :formItemSelectArr="formOptionsGroups.formItemSelectArr"
+                :formItemTypeMap="formOptionsGroups.formItemTypeMap"
+                :allFormItemCodeArr="formOptionsGroups.allFormItemCodeArr"
                 @addOptionItem="addOptionItem"
                 @deleteOptionItem="deleteOptionItem"
-                @addFormStructLine="addFormStructLine"
+                @addConditionLine="addConditionLine"
+                @delConditionLine="delConditionLine"
                 @modelChange="modelChange"
                 @conditionValueChange="conditionValueChange"
             ></VForm>
@@ -21,7 +23,8 @@
 </template>
 
 <script>
-import { ref, defineComponent, computed } from "vue";
+import { ref, defineComponent, computed, watch } from "vue";
+import formConfig from "../../../../test/formConfig.vue";
 import VForm from "./components/VForm/VForm.vue";
 import { useRouter } from "vue-router";
 import { mockData, createFormItemMap, updateMockData, createConditionLine } from "./mockData.js";
@@ -34,32 +37,57 @@ export default defineComponent({
     setup() {
         const router = useRouter();
         const formConfigChunk = (() => {
+            const VFormRef = ref(null)
             const formStruct = ref(JSON.parse(JSON.stringify(mockData)));
+            console.log('formStruct:', formStruct.value);
+            // const formOptionsGroups = ref({
+            //     formItemTypeMap: new Map(),
+            //     formItemSelectArr: [],
+            //     allFormItemCodeArr: []
+            // })
             const formOptionsGroups = computed(() => {
+                console.log('formStruct.value：：：：||||||||', formStruct.value)
                 return createFormItemMap(formStruct.value);
             })
-            console.log(formOptionsGroups.value)
+            // console.log('formOptionsGroups:', formOptionsGroups.value)
+            // watch(() => formStruct.value, () => {
+            //     console.log('formStruct:', formStruct.value);
+            //     console.log('formOptionsGroups44444:', formOptionsGroups.value)
+            //     formOptionsGroups.value = createFormItemMap(formStruct.value);
+            // }, {
+            //     deep: true,
+            //     immediate: true
+            // })
             const addOptionItem = (formItem, optionItem) => {
                 formItem.formItemStruct.options.push(optionItem);
             };
             const deleteOptionItem = (formItem, itemIndex) => {
                 formItem.formItemStruct.options.splice(itemIndex, 1);
             };
-            const addFormStructLine = (formItem) => {
+            const addConditionLine = (formItem) => {
                 console.log(formItem);
                 formItem.conditionStruct.conditionList.push(createConditionLine());
+            };
+            const delConditionLine = (formItem, conditionLineIndex) => {
+                formItem.conditionStruct.conditionList.splice(conditionLineIndex, 1);
             };
             const modelChange = (conditionLine, value) => {
                 conditionLine.model = value;
                 conditionLine.modelType = formOptionsGroups.value.formItemTypeMap.get(value).type;
+                conditionLine.modelMiddleUse = formOptionsGroups.value.formItemTypeMap.get(value).isMiddleUse;
             };
             const conditionValueChange = (conditionLine, value) => {
                 conditionLine.conditionValue = value;
             };
-            const saveForm = () => {
+            const saveForm = async () => {
                 console.log(formStruct.value);
-                updateMockData(formStruct.value);
-                message.success('保存成功！');
+                const validateRes = await VFormRef.value.modelFormRef.validateFields();
+                if (validateRes) {
+                    updateMockData(formStruct.value);
+                    message.success('保存成功！');
+                } else {
+                    message.error('校验失败！');
+                }
             };
             const goForm = () => {
                 router.push({
@@ -67,11 +95,13 @@ export default defineComponent({
                 });
             };
             return {
+                VFormRef,
                 formStruct,
                 formOptionsGroups,
                 addOptionItem,
                 deleteOptionItem,
-                addFormStructLine,
+                addConditionLine,
+                delConditionLine,
                 modelChange,
                 conditionValueChange,
                 saveForm,
@@ -80,13 +110,13 @@ export default defineComponent({
         })()
         
         return {
+            VFormRef: formConfigChunk.VFormRef,
             formStruct: formConfigChunk.formStruct,
-            formItemSelectArr: formConfigChunk.formOptionsGroups.value.formItemSelectArr,
-            formItemTypeMap: formConfigChunk.formOptionsGroups.value.formItemTypeMap,
-            formItemIsShowMap: formConfigChunk.formOptionsGroups.value.formItemIsShowMap,
+            formOptionsGroups: formConfigChunk.formOptionsGroups,
             addOptionItem: formConfigChunk.addOptionItem,
             deleteOptionItem: formConfigChunk.deleteOptionItem,
-            addFormStructLine: formConfigChunk.addFormStructLine,
+            addConditionLine: formConfigChunk.addConditionLine,
+            delConditionLine: formConfigChunk.delConditionLine,
             modelChange: formConfigChunk.modelChange,
             conditionValueChange: formConfigChunk.conditionValueChange,
             saveForm: formConfigChunk.saveForm,
