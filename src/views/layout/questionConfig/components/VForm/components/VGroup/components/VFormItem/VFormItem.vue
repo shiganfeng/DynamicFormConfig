@@ -1,5 +1,13 @@
 <template>
     <div class="VFormItem">
+        <div class="head">
+            <div class="left">
+            
+            </div>
+            <div class="right">
+                <a-button class="formItemDragButton" type="primary">拖动</a-button>
+            </div>
+        </div>
         <div class="top">
             <div class="item">
                 <a-form-item
@@ -655,6 +663,19 @@ export default defineComponent({
     border-radius: 8px;
     &:last-child {
         margin-bottom: 0;
+    }
+    &>.head {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        &>.left {
+        
+        }
+        &>.right {
+            display: flex;
+            align-items: center;
+        }
     }
     &>.top {
         width: 100%;

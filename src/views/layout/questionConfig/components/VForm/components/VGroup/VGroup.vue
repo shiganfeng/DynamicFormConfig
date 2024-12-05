@@ -1,47 +1,64 @@
 <template>
     <div class="VGroup">
         <div class="top">
-            <a-form-item
-                label="分组名"
-                :name="[...formItemIndexes, 'groupName']"
-                :rules="[{ required: true }]"
-            >
-                <a-input
-                    :value="group.groupName"
-                    @update:value="groupNameChange"
-                    placeholder="请输入"
-                />
-            </a-form-item>
+            <div class="left">
+                <a-form-item
+                    label="分组名"
+                    :name="[...formItemIndexes, 'groupName']"
+                    :rules="[{ required: true }]"
+                >
+                    <a-input
+                        :value="group.groupName"
+                        @update:value="groupNameChange"
+                        placeholder="请输入"
+                    />
+                </a-form-item>
+            </div>
+            <div class="right">
+                <a-button class="groupDragButton" type="primary">拖动</a-button>
+            </div>
         </div>
-        <VFormItem
-            v-for="(formItem, formItemIndex) in group.formItems"
-            :key="formItem.formItemKey"
-            :formItem="formItem"
-            :formItemIndex="formItemIndex"
-            :formItemIndexes="[...formItemIndexes, 'formItems', formItemIndex]"
-            :formItemSelectArr="formItemSelectArr"
-            :formItemTypeMap="formItemTypeMap"
-            :allFormItemCodeArr="allFormItemCodeArr"
-            :formItemMethodParamsDependMap="formItemMethodParamsDependMap"
-            v-model:label="formItem.label"
-            v-model:formItemCode="formItem.formItemCode"
-            v-model:type="formItem.type"
-            v-model:methodType="formItem.methodType"
-            v-model:methodTypeParams="formItem.methodTypeParams"
-            v-model:required="formItem.required"
-            v-model:isShow="formItem.isShow"
-            v-model:isShowComputeValue="formItem.isShowComputeValue"
-            v-model:isMiddleUse="formItem.isMiddleUse"
-            v-model:message="formItem.message"
-            v-model:options="formItem.formItemStruct.options"
-            v-model:relation="formItem.conditionStruct.relation"
-            @addOptionItem="(optionItem) => addOptionItem(formItem, optionItem)"
-            @deleteOptionItem="(itemIndex) => deleteOptionItem(formItem, itemIndex)"
-            @addConditionLine="addConditionLine(formItem)"
-            @delConditionLine="(conditionLineIndex) => delConditionLine(formItem, conditionLineIndex)"
-            @modelChange="modelChange"
-            @conditionValueChange="conditionValueChange"
-        ></VFormItem>
+        <draggable
+            v-model="group.formItems"
+            tag="div"
+            class="formItemsDiv"
+            handle=".formItemDragButton"
+            itemKey="formItemKey"
+            :animation="200"
+            :scrollSensitivity="150"
+            :scrollSpeed="50"
+        >
+            <template #item="{ element: formItem, index: formItemIndex }">
+                <VFormItem
+                    :key="formItem.formItemKey"
+                    :formItem="formItem"
+                    :formItemIndex="formItemIndex"
+                    :formItemIndexes="[...formItemIndexes, 'formItems', formItemIndex]"
+                    :formItemSelectArr="formItemSelectArr"
+                    :formItemTypeMap="formItemTypeMap"
+                    :allFormItemCodeArr="allFormItemCodeArr"
+                    :formItemMethodParamsDependMap="formItemMethodParamsDependMap"
+                    v-model:label="formItem.label"
+                    v-model:formItemCode="formItem.formItemCode"
+                    v-model:type="formItem.type"
+                    v-model:methodType="formItem.methodType"
+                    v-model:methodTypeParams="formItem.methodTypeParams"
+                    v-model:required="formItem.required"
+                    v-model:isShow="formItem.isShow"
+                    v-model:isShowComputeValue="formItem.isShowComputeValue"
+                    v-model:isMiddleUse="formItem.isMiddleUse"
+                    v-model:message="formItem.message"
+                    v-model:options="formItem.formItemStruct.options"
+                    v-model:relation="formItem.conditionStruct.relation"
+                    @addOptionItem="(optionItem) => addOptionItem(formItem, optionItem)"
+                    @deleteOptionItem="(itemIndex) => deleteOptionItem(formItem, itemIndex)"
+                    @addConditionLine="addConditionLine(formItem)"
+                    @delConditionLine="(conditionLineIndex) => delConditionLine(formItem, conditionLineIndex)"
+                    @modelChange="modelChange"
+                    @conditionValueChange="conditionValueChange"
+                ></VFormItem>
+            </template>
+        </draggable>
     </div>
 </template>
 
@@ -161,6 +178,18 @@ export default defineComponent({
     &>.top {
         width: 100%;
         display: flex;
+        justify-content: space-between;
+        align-items: center;
+        &>.left {
+        
+        }
+        &>.right {
+        
+        }
+    }
+    .formItemsDiv {
+        display: flex;
+        flex-direction: column;
     }
 }
 </style>

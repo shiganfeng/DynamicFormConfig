@@ -7,24 +7,36 @@
             :validate-messages="{ required: '${label}必填' }"
             layout="horizontal"
         >
-            <VGroup
-                v-for="(group, groupIndex) in formStruct.groups"
-                :key="group.groupKey"
-                :formItemIndexes="['groups', groupIndex]"
-                :group="group"
-                :groupIndex="groupIndex"
-                :formItemSelectArr="formItemSelectArr"
-                :allFormItemCodeArr="allFormItemCodeArr"
-                :formItemTypeMap="formItemTypeMap"
-                :formItemMethodParamsDependMap="formItemMethodParamsDependMap"
-                v-model:groupName="group.groupName"
-                @addOptionItem="addOptionItem"
-                @deleteOptionItem="deleteOptionItem"
-                @addConditionLine="addConditionLine"
-                @modelChange="modelChange"
-                @conditionValueChange="conditionValueChange"
-                @delConditionLine="delConditionLine"
-            ></VGroup>
+            <draggable
+                v-model="formStruct.groups"
+                tag="div"
+                class="groups"
+                handle=".groupDragButton"
+                itemKey="groupKey"
+                :animation="200"
+                :scrollSensitivity="150"
+                :scrollSpeed="50"
+            >
+                <template #item="{ element: group, index: groupIndex }">
+                    <VGroup
+                        :key="group.groupKey"
+                        :formItemIndexes="['groups', groupIndex]"
+                        :group="group"
+                        :groupIndex="groupIndex"
+                        :formItemSelectArr="formItemSelectArr"
+                        :allFormItemCodeArr="allFormItemCodeArr"
+                        :formItemTypeMap="formItemTypeMap"
+                        :formItemMethodParamsDependMap="formItemMethodParamsDependMap"
+                        v-model:groupName="group.groupName"
+                        @addOptionItem="addOptionItem"
+                        @deleteOptionItem="deleteOptionItem"
+                        @addConditionLine="addConditionLine"
+                        @modelChange="modelChange"
+                        @conditionValueChange="conditionValueChange"
+                        @delConditionLine="delConditionLine"
+                    ></VGroup>
+                </template>
+            </draggable>
         </a-form>
     </div>
 </template>
@@ -128,5 +140,9 @@ export default defineComponent({
     display: flex;
     flex-direction: column;
     padding: 16px;
+    .groups {
+        display: flex;
+        flex-direction: column;
+    }
 }
 </style>

@@ -551,7 +551,7 @@ let mockData = {
                 },
                 {
                     formItemKey: '组四的项目四', // 应该自动生成
-                    formItemCode: 'code19', // 默认自动生成
+                    formItemCode: 'code20', // 默认自动生成
                     label: '依赖值一除以依赖值二(千分比显示)',
                     methodType: 'ComputeDivision', // 数据来源方式
                     methodTypeParams: [
@@ -573,6 +573,16 @@ let mockData = {
                     }
                 },
             ]
+        },
+        {
+            groupName: '组五',
+            groupKey: 'fifthGroup',
+            formItems: []
+        },
+        {
+            groupName: '组六',
+            groupKey: 'sixthGroup',
+            formItems: []
         }
     ]
 };

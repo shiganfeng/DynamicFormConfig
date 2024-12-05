@@ -7,11 +7,13 @@ import dayjs from "dayjs";
 import 'dayjs/locale/zh-cn';
 import router from "./route/route.js";
 import pinia from "./store/store.js";
+import draggable from 'vuedraggable';
 
 // 设置全局 dayjs 语言为中文
 dayjs.locale('zh-cn');
 
 const app = createApp(App);
+app.component('draggable', draggable);
 
 app.use(antDesignVueComponents);
 app.use(router);

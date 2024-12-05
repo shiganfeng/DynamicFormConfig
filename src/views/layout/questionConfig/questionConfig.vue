@@ -170,7 +170,7 @@ export default defineComponent({
                 saveForm,
                 goForm
             }
-        })()
+        })();
         
         return {
             VFormRef: formConfigChunk.VFormRef,
