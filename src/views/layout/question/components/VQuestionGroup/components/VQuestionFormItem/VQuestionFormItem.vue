@@ -6,7 +6,7 @@
                 :is="formItem.type"
                 :value="computeFormState[formItem.formItemKey].value"
                 :options="formItem.formItemStruct.options"
-                @update:value="(value) => updateOriginValue(formItem.formItemKey, value)"
+                @update:value="(value) => updateOriginValue(formItem, value)"
             ></component>
         </div>
     </div>
@@ -21,6 +21,10 @@ import VDateTime from "../../../VDateTime.vue";
 import VSingleSelect from "../../../VSingleSelect.vue";
 import VMultipleSelect from "../../../VMultipleSelect.vue";
 import VSwitch from "../../../VSwitch.vue";
+import VNumber from "../../../VNumber.vue";
+import VComputeText from "../../../VComputeText.vue";
+import VPercent from "../../../VPercent.vue";
+import VThousand from "../../../VThousand.vue";
 import VQuestionGroup from "../../VQuestionGroup.vue";
 export default defineComponent({
     components: {
@@ -31,6 +35,10 @@ export default defineComponent({
         VSingleSelect,
         VMultipleSelect,
         VSwitch,
+        VNumber,
+        VComputeText,
+        VPercent,
+        VThousand,
     },
     props: {
         computeFormState: {
@@ -65,8 +73,8 @@ export default defineComponent({
         'updateOriginValue'
     ],
     setup(props, ctx) {
-        const updateOriginValue = (formItemKey, value) => {
-            ctx.emit('updateOriginValue', formItemKey, value);
+        const updateOriginValue = (formItem, value) => {
+            ctx.emit('updateOriginValue', formItem, value);
         }
         return {
             updateOriginValue

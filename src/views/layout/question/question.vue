@@ -19,7 +19,14 @@
 
 <script>
 import {defineComponent, ref, computed} from "vue";
-import { mockData,defaultConditionValueMap, computeIsShowFormItem, createFormItemMap } from "../questionConfig/mockData.js";
+import {
+    mockData,
+    defaultConditionValueMap,
+    computeIsShowFormItem,
+    createFormItemMap,
+    createFormItemDependMap,
+    valueSourceDict
+} from "../questionConfig/mockData.js";
 import VInput from "./components/VInput.vue";
 import VCheckbox from "./components/VCheckbox.vue";
 import VRadio from "./components/VRadio.vue";
@@ -27,6 +34,10 @@ import VDateTime from "./components/VDateTime.vue";
 import VSingleSelect from "./components/VSingleSelect.vue";
 import VMultipleSelect from "./components/VMultipleSelect.vue";
 import VSwitch from "./components/VSwitch.vue";
+import VNumber from "./components/VNumber.vue";
+import VComputeText from "./components/VComputeText.vue";
+import VPercent from "./components/VPercent.vue";
+import VThousand from "./components/VThousand.vue";
 import {message} from "ant-design-vue";
 import {useRouter} from "vue-router";
 import VQuestionGroup from "./components/VQuestionGroup/VQuestionGroup.vue";
@@ -39,6 +50,10 @@ export default defineComponent({
         VSingleSelect,
         VMultipleSelect,
         VSwitch,
+        VNumber,
+        VComputeText,
+        VPercent,
+        VThousand,
         VQuestionGroup
     },
     setup() {
@@ -54,8 +69,12 @@ export default defineComponent({
             // 后端存储的表单结构映射的表单项的Map
             const formOptionsGroups = computed(() => {
                 return createFormItemMap(formStruct.value);
-            })
-            console.log('formOptionsGroups:', formOptionsGroups.value);
+            });
+            // console.log('formOptionsGroups:', formOptionsGroups.value);
+            // 每一个表单项的计算依赖
+            const formItemDependMap = computed(() => {
+                return createFormItemDependMap(formStruct.value).formItemMethodParamsDependMap;
+            });
             // 表单显示的数据
             const computeFormState = computed(() => {
                 const obj = {};
@@ -77,6 +96,7 @@ export default defineComponent({
                     resolve(JSON.parse(JSON.stringify(mockData)));
                 });
                 console.log('formStruct', formStruct.value);
+                // console.log('8888---formItemDependMap---', formItemDependMap.value);
             };
             const queryFormData = async () => {
                 const res = await new Promise((resolve) => {
@@ -98,12 +118,48 @@ export default defineComponent({
                     console.log('computeFormState', computeFormState.value);
                 }
             };
-            const updateOriginValue = (formItemKey, value) => {
+            const updateOriginValue = (formItem, value) => {
+                const formItemKey = formItem.formItemKey;
                 // 对象引用
                 computeFormState.value[formItemKey].value = value;
                 console.log('computeFormState, ____', computeFormState.value);
-                console.log('computeFormState, ++++', formData.value);
-            }
+                //
+                console.log('updateOriginValue', formItemKey);
+                console.log('999---formItemDependMap---', formItemDependMap.value);
+                console.log('999---formOptionsGroups---', formOptionsGroups.value.formItemTypeMap);
+                const formItemKeyDependSet = formItemDependMap.value.get(formItemKey);
+                console.log('formItemKeyDependSet', formItemKeyDependSet);
+                // 递归查找，更新计算值
+                recurDepend(formItemKeyDependSet);
+            };
+            const recurDepend = (dependSet) => {
+                dependSet.forEach(computeKey => {
+                    console.log('computeKey:', computeKey);
+                    const computeFormItem = formOptionsGroups.value.formItemTypeMap.get(computeKey);
+                    if (computeFormItem) {
+                        console.log('computeFormItem:', computeFormItem);
+                        console.log('computeFormState:', computeFormState.value);
+                        // 找到对应的计算方法
+                        const sourceTypeResult = valueSourceDict.find(source => source.methodType === computeFormItem.methodType);
+                        if (sourceTypeResult) {
+                            // 计算方法所需的参数
+                            const args = computeFormItem.methodTypeParams.map(itemKey => computeFormState.value[itemKey].value);
+                            console.log('args:', args);
+                            // 计算出结果值
+                            const computeResultValue = sourceTypeResult.methodCompute(args);
+                            console.log('computeResultValue:', computeResultValue);
+                            // 更新关联的值
+                            computeFormState.value[computeFormItem.formItemKey].value = computeResultValue;
+                            // 如果有别的值依赖于，上面那个关联的值，递归更新其他关联的值
+                            const otherDependComputeFormItem = formItemDependMap.value.get(computeFormItem.formItemKey);
+                            if (otherDependComputeFormItem) {
+                                // 这里可能会有循环依赖的bug（不会写-注意口头约定）
+                                recurDepend(otherDependComputeFormItem);
+                            }
+                        }
+                    }
+                })
+            };
             const onSubmit = () => {
                 formRef.value.validate().then(() => {
                     message.success('提交成功！');
@@ -136,7 +192,6 @@ export default defineComponent({
         formChunk.queryFormData();
         formChunk.queryFomStruct();
         
-        
         return {
             computeFormState: formChunk.computeFormState,
             formItemIsShowMap: formChunk.formItemIsShowMap,
@@ -147,7 +202,6 @@ export default defineComponent({
             onSubmit: formChunk.onSubmit,
             goFormConfig: formChunk.goFormConfig,
             updateOriginValue: formChunk.updateOriginValue,
-            
         }
     }
 })
@@ -167,9 +221,11 @@ export default defineComponent({
         flex: 1 0 auto;
         display: flex;
         flex-direction: column;
+        overflow-y: auto;
     }
     &>.bottom {
         width: 100%;
+        padding: 16px;
         display: flex;
         justify-content: center;
         align-items: center;

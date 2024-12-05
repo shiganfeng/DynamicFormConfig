@@ -82,6 +82,17 @@
                 </a-form-item>
             </div>
             <div class="item">
+                <!-- 当做一些依赖自动计算的时候用到（仅用于显示） -->
+                <a-form-item
+                    label="是否禁用"
+                >
+                    <a-switch
+                        :checked="isShowComputeValue"
+                        @change="isShowComputeValueChange"
+                    ></a-switch>
+                </a-form-item>
+            </div>
+            <div class="item">
                 <a-form-item
                     label="是否只是用来中转的中间项"
                 >
@@ -89,6 +100,56 @@
                         :checked="isMiddleUse"
                         @change="isMiddleUseChange"
                     ></a-switch>
+                </a-form-item>
+            </div>
+        </div>
+        <div class="top">
+            <div class="item">
+                <a-form-item
+                    label="数据来源方式"
+                    :name="[...formItemIndexes, 'methodType']"
+                    :rules="methodTypeRule"
+                >
+                    <a-select
+                        :value="methodType"
+                        placeholder="Please select"
+                        @update:value="methodTypeChange"
+                    >
+                        <a-select-option
+                            v-for="item in valueSourceDict"
+                            :key="item.methodType"
+                            :value="item.methodType"
+                        >{{item.methodTypeName}}</a-select-option>
+                    </a-select>
+                </a-form-item>
+            </div>
+            <div class="item">
+                <a-form-item
+                    label="数据来源参数"
+                    :name="[...formItemIndexes, 'methodTypeParams']"
+                    :rules="methodTypeRule"
+                >
+                    <a-select
+                        :value="methodTypeParams"
+                        mode="multiple"
+                        style="width: 350px"
+                        @change="methodTypeParamsChange"
+                    >
+                        <a-select-opt-group
+                            v-for="selectGroup in formItemSelectArr"
+                            :key="selectGroup.groupKey"
+                            :label="selectGroup.groupName"
+                        >
+                            <!-- 自身不可选 -->
+                            <a-select-option
+                                v-for="selectFormItem in selectGroup.formItems"
+                                :key="selectFormItem.formItemKey"
+                                :label="selectFormItem.label"
+                                :disabled="selectFormItem.formItemKey === formItem.formItemKey || methodParamsSelectSet.has(selectFormItem.formItemKey)"
+                                :value="selectFormItem.formItemKey"
+                            >{{selectFormItem.label}}</a-select-option>
+                        </a-select-opt-group>
+                    </a-select>
                 </a-form-item>
             </div>
         </div>
@@ -212,7 +273,7 @@
 <script>
 import {computed, defineComponent, nextTick, ref} from "vue";
 import { PlusOutlined, CloseCircleOutlined } from '@ant-design/icons-vue';
-import { componentsList, createUniqueKey, defaultConditionValueMap, relationList, dynamicComponentType } from "../../../../../../mockData.js";
+import { componentRequiredMethodTypeList, componentsList, createUniqueKey, defaultConditionValueMap, relationList, dynamicComponentType, valueSourceDict } from "../../../../../../mockData.js";
 import {message} from "ant-design-vue";
 import VInput from "../../../../../../../question/components/VInput.vue";
 import VCheckbox from "../../../../../../../question/components/VCheckbox.vue";
@@ -247,6 +308,10 @@ export default defineComponent({
         VSwitch,
     },
     props: {
+        formItemMethodParamsDependMap: {
+            type: Map,
+            default: () => new Map()
+        },
         allFormItemCodeArr: {
             type: Array,
             default: () => ([]),  
@@ -273,6 +338,9 @@ export default defineComponent({
                 type: '', // 下拉选择组件
                 required: true, // 校验是否必填
                 isShow: true, // 是否显示在表单中
+                isShowComputeValue: false, // 是否只是用来显示计算出来的值
+                methodType: '',
+                methodTypeParams: [],
                 isMiddleUse: false, // 是否只是用来中转的中间项
                 message: '', // 校验时候的信息
                 conditionStruct: {
@@ -302,6 +370,14 @@ export default defineComponent({
             type: String,
             default: 'VInput'
         },
+        methodType: {
+            type: String,
+            default: ''
+        },
+        methodTypeParams: {
+            type: Array,
+            default: () => ([])
+        },
         required: {
             type: Boolean,
             default: false
@@ -309,6 +385,10 @@ export default defineComponent({
         isShow: {
             type: Boolean,
             default: true
+        },
+        isShowComputeValue: {
+            type: Boolean,
+            default: false
         },
         isMiddleUse: {
             type: Boolean,
@@ -331,8 +411,11 @@ export default defineComponent({
         'update:label',
         'update:formItemCode',
         'update:type',
+        'update:methodType',
+        'update:methodTypeParams',
         'update:required',
         'update:isShow',
+        'update:isShowComputeValue',
         'update:isMiddleUse',
         'update:message',
         'update:options',
@@ -361,11 +444,20 @@ export default defineComponent({
             const typeChange = (value) => {
                 ctx.emit('update:type', value);
             };
+            const methodTypeChange = (value) => {
+                ctx.emit('update:methodType', value);
+            };
+            const methodTypeParamsChange = (value) => {
+                ctx.emit('update:methodTypeParams', value);
+            };
             const requiredChange = (value) => {
                 ctx.emit('update:required', value);
             }
             const isShowChange = (value) => {
                 ctx.emit('update:isShow', value);
+            }
+            const isShowComputeValueChange = (value) => {
+                ctx.emit('update:isShowComputeValue', value);
             }
             const isMiddleUseChange = (value) => {
                 ctx.emit('update:isMiddleUse', value);
@@ -382,6 +474,12 @@ export default defineComponent({
             const addOptionItemLabel = ref('');
             const addOptionItem = () => {
                 if (!addOptionItemLabel.value) return message.warning('内容不为空！');
+                let code = createUniqueKey('formItem');
+                const optionsCodeList = props.options.map(item => item.code);
+                if (optionsCodeList.includes(code)) {
+                    message.warning('选项code重复，请重新添加添加！');
+                    return;
+                }
                  ctx.emit('addOptionItem', {
                      label: addOptionItemLabel.value,
                      code: createUniqueKey('formItem')
@@ -392,12 +490,14 @@ export default defineComponent({
                 ctx.emit('deleteOptionItem', itemIndex);
             };
             const modelChange = (conditionLine, value) => {
+                // 组件类型不同，先清空值
                 ctx.emit('conditionValueChange', conditionLine, '');
                 ctx.emit('modelChange', conditionLine, value);
                 const type = (props.formItemTypeMap.get(value) || {
                     type: 'VInput',
                     options: []
                 }).type;
+                // 再设置对应组件类型的默认值
                 ctx.emit('conditionValueChange', conditionLine, defaultConditionValueMap[type]);
             }
             const conditionValueChange = (conditionLine, value) => {
@@ -442,6 +542,17 @@ export default defineComponent({
                 }
                 console.log('num:', num)
                 return num >= 2;
+            });
+            const methodTypeRule = computed(() => {
+                return [
+                    {
+                        required: componentRequiredMethodTypeList.includes(props.type),
+                        trigger: ['change', 'blur'],
+                    }
+                ]
+            });
+            const methodParamsSelectSet = computed(() => {
+                return props.formItemMethodParamsDependMap.get(props.formItem.formItemKey) || new Set();
             })
             const formItemCodeRule = [
                 {
@@ -467,8 +578,11 @@ export default defineComponent({
                 labelChange,
                 formItemCodeChange,
                 typeChange,
+                methodTypeChange,
+                methodTypeParamsChange,
                 requiredChange,
                 isShowChange,
+                isShowComputeValueChange,
                 isMiddleUseChange,
                 messageChange,
                 optionsChange,
@@ -481,20 +595,27 @@ export default defineComponent({
                 delConditionLine,
                 addOptionItemLabel,
                 messageRule,
-                formItemCodeRule
+                formItemCodeRule,
+                methodTypeRule,
+                methodParamsSelectSet
             }
         })();
         
         return {
             transFormType,
+            componentRequiredMethodTypeList,
             componentsList,
             relationList,
+            valueSourceDict,
             dynamicComponentType,
             labelChange: formItemChunk.labelChange,
             formItemCodeChange: formItemChunk.formItemCodeChange,
             typeChange: formItemChunk.typeChange,
+            methodTypeChange: formItemChunk.methodTypeChange,
+            methodTypeParamsChange: formItemChunk.methodTypeParamsChange,
             requiredChange: formItemChunk.requiredChange,
             isShowChange: formItemChunk.isShowChange,
+            isShowComputeValueChange: formItemChunk.isShowComputeValueChange,
             isMiddleUseChange: formItemChunk.isMiddleUseChange,
             messageChange: formItemChunk.messageChange,
             optionsChange: formItemChunk.optionsChange,
@@ -508,6 +629,8 @@ export default defineComponent({
             addOptionItemLabel: formItemChunk.addOptionItemLabel,
             messageRule: formItemChunk.messageRule,
             formItemCodeRule: formItemChunk.formItemCodeRule,
+            methodTypeRule: formItemChunk.methodTypeRule,
+            methodParamsSelectSet: formItemChunk.methodParamsSelectSet,
         }
     }
 })

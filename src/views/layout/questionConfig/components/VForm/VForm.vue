@@ -16,6 +16,7 @@
                 :formItemSelectArr="formItemSelectArr"
                 :allFormItemCodeArr="allFormItemCodeArr"
                 :formItemTypeMap="formItemTypeMap"
+                :formItemMethodParamsDependMap="formItemMethodParamsDependMap"
                 v-model:groupName="group.groupName"
                 @addOptionItem="addOptionItem"
                 @deleteOptionItem="deleteOptionItem"
@@ -37,6 +38,10 @@ export default defineComponent({
         VGroup
     },
     props: {
+        formItemMethodParamsDependMap: {
+            type: Map,
+            default: () => new Map()
+        },
         allFormItemCodeArr: {
             type: Array,
             default: () => ([]),

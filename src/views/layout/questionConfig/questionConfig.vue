@@ -7,6 +7,7 @@
                 :formItemSelectArr="formOptionsGroups.formItemSelectArr"
                 :formItemTypeMap="formOptionsGroups.formItemTypeMap"
                 :allFormItemCodeArr="formOptionsGroups.allFormItemCodeArr"
+                :formItemMethodParamsDependMap="formItemMethodParamsDependMap"
                 @addOptionItem="addOptionItem"
                 @deleteOptionItem="deleteOptionItem"
                 @addConditionLine="addConditionLine"
@@ -24,10 +25,16 @@
 
 <script>
 import { ref, defineComponent, computed, watch } from "vue";
-import formConfig from "../../../../test/formConfig.vue";
 import VForm from "./components/VForm/VForm.vue";
 import { useRouter } from "vue-router";
-import { mockData, createFormItemMap, updateMockData, createConditionLine } from "./mockData.js";
+import {
+    mockData,
+    createFormItemMap,
+    createFormItemDependMap,
+    updateMockData,
+    createConditionLine,
+    dynamicComponentType
+} from "./mockData.js";
 import {message} from "ant-design-vue";
 
 export default defineComponent({
@@ -48,7 +55,13 @@ export default defineComponent({
             const formOptionsGroups = computed(() => {
                 console.log('formStruct.value：：：：||||||||', formStruct.value)
                 return createFormItemMap(formStruct.value);
-            })
+            });
+            // 每一个表单项的计算依赖
+            const formItemMethodParamsDependMap = computed(() => {
+                return createFormItemDependMap(formStruct.value).formItemMethodParamsDependMap;
+            });
+            console.log('formItemMethodParamsDependMap---', formItemMethodParamsDependMap);
+            
             // console.log('formOptionsGroups:', formOptionsGroups.value)
             // watch(() => formStruct.value, () => {
             //     console.log('formStruct:', formStruct.value);
@@ -61,11 +74,59 @@ export default defineComponent({
             const addOptionItem = (formItem, optionItem) => {
                 formItem.formItemStruct.options.push(optionItem);
             };
+            const allConditionList = computed(() => {
+                const arr = [];
+                formStruct.value.groups.forEach(group => {
+                    group.formItems.forEach(formItem => {
+                        formItem.conditionStruct.conditionList.forEach(conditionItem => {
+                            arr.push(conditionItem);
+                        })
+                    })
+                })
+                return arr;
+            })
+            console.log('allConditionList------:', allConditionList.value);
             const deleteOptionItem = (formItem, itemIndex) => {
+                const optionLineCode = formItem.formItemStruct.options[itemIndex].code;
+                console.log('optionLineCode', optionLineCode);
                 formItem.formItemStruct.options.splice(itemIndex, 1);
+                // 删除某一项（动态配置选择项）后，可能有其他的关联项选择了已删除的的值，需要清除掉
+                console.log('deleteOptionItem', formStruct.value);
+                // 方法一：计算属性-减少多层循环（借用了对象引用）
+                // 方法二：可以用对象，但是代码量太大，暂时没写
+                allConditionList.value.forEach(conditionItem => {
+                    if(dynamicComponentType.includes(conditionItem.modelType)) {
+                        switch (conditionItem.modelType) {
+                            case 'VRadio': {
+                                if (optionLineCode === conditionItem.conditionValue) {
+                                    conditionItem.conditionValue = '';
+                                }
+                                break;
+                            }
+                            case 'VSingleSelect': {
+                                if (optionLineCode === conditionItem.conditionValue) {
+                                    conditionItem.conditionValue = '';
+                                }
+                                break;
+                            }
+                            case 'VCheckbox': {
+                                if (conditionItem.conditionValue.includes(optionLineCode)) {
+                                    const findIndex = conditionItem.conditionValue.findIndex(val => val === optionLineCode);
+                                    conditionItem.conditionValue.splice(findIndex, 1);
+                                }
+                                break;
+                            }
+                            case 'VMultipleSelect': {
+                                if (conditionItem.conditionValue.includes(optionLineCode)) {
+                                    const findIndex = conditionItem.conditionValue.findIndex(val => val === optionLineCode);
+                                    conditionItem.conditionValue.splice(findIndex, 1);
+                                }
+                            }
+                        }
+                    }
+                })
             };
             const addConditionLine = (formItem) => {
-                console.log(formItem);
                 formItem.conditionStruct.conditionList.push(createConditionLine());
             };
             const delConditionLine = (formItem, conditionLineIndex) => {
@@ -77,6 +138,7 @@ export default defineComponent({
                 conditionLine.modelMiddleUse = formOptionsGroups.value.formItemTypeMap.get(value).isMiddleUse;
             };
             const conditionValueChange = (conditionLine, value) => {
+                console.log('conditionLine', conditionLine);
                 conditionLine.conditionValue = value;
             };
             const saveForm = async () => {
@@ -98,6 +160,7 @@ export default defineComponent({
                 VFormRef,
                 formStruct,
                 formOptionsGroups,
+                formItemMethodParamsDependMap,
                 addOptionItem,
                 deleteOptionItem,
                 addConditionLine,
@@ -113,6 +176,7 @@ export default defineComponent({
             VFormRef: formConfigChunk.VFormRef,
             formStruct: formConfigChunk.formStruct,
             formOptionsGroups: formConfigChunk.formOptionsGroups,
+            formItemMethodParamsDependMap: formConfigChunk.formItemMethodParamsDependMap,
             addOptionItem: formConfigChunk.addOptionItem,
             deleteOptionItem: formConfigChunk.deleteOptionItem,
             addConditionLine: formConfigChunk.addConditionLine,

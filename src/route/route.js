@@ -32,6 +32,11 @@ const routes = [
                 path: "questionConfig",
                 name: "questionConfig",
                 component: () => import("../views/layout/questionConfig/questionConfig.vue"),
+            },
+            {
+                path: "focusCell",
+                name: "focusCell",
+                component: () => import("../views/layout/focusCell/focusCell.vue"),
             }
         ]
     }

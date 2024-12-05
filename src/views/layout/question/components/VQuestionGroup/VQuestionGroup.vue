@@ -45,8 +45,8 @@ export default defineComponent({
         'updateOriginValue'
     ],
     setup(props, ctx) {
-        const updateOriginValue = (formItemKey, value) => {
-            ctx.emit('updateOriginValue', formItemKey, value);
+        const updateOriginValue = (formItem, value) => {
+            ctx.emit('updateOriginValue', formItem, value);
         }
         return {
             updateOriginValue

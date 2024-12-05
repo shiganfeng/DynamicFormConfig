@@ -22,11 +22,15 @@
             :formItemSelectArr="formItemSelectArr"
             :formItemTypeMap="formItemTypeMap"
             :allFormItemCodeArr="allFormItemCodeArr"
+            :formItemMethodParamsDependMap="formItemMethodParamsDependMap"
             v-model:label="formItem.label"
             v-model:formItemCode="formItem.formItemCode"
             v-model:type="formItem.type"
+            v-model:methodType="formItem.methodType"
+            v-model:methodTypeParams="formItem.methodTypeParams"
             v-model:required="formItem.required"
             v-model:isShow="formItem.isShow"
+            v-model:isShowComputeValue="formItem.isShowComputeValue"
             v-model:isMiddleUse="formItem.isMiddleUse"
             v-model:message="formItem.message"
             v-model:options="formItem.formItemStruct.options"
@@ -50,6 +54,10 @@ export default defineComponent({
         VFormItem
     },
     props: {
+        formItemMethodParamsDependMap: {
+            type: Map,
+            default: () => new Map()
+        },
         allFormItemCodeArr: {
             type: Array,
             default: () => ([]),

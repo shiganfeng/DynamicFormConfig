@@ -33,6 +33,10 @@ export default defineComponent({
                 {
                     label: '简单表单配置',
                     name: 'question'
+                },
+                {
+                    label: '单元格组件聚焦',
+                    name: 'focusCell'
                 }
             ]);
             const menuClick = (menu) => {
