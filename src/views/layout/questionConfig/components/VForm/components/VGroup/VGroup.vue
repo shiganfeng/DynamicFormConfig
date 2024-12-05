@@ -15,10 +15,31 @@
                 </a-form-item>
             </div>
             <div class="right">
+                <a-button
+                    :type="isFoldGroup ? 'primary' : 'default'"
+                    @click="foldOrUnFoldGroupClick"
+                >
+                    {{isFoldGroup ? '展开' : '折叠'}}
+                </a-button>
+                <a-button
+                    :type="isFoldGroupAllFormItem ? 'primary' : 'default'"
+                    @click="foldOrUnFoldGroupAllFormItemClick"
+                >
+                    {{isFoldGroupAllFormItem ? '展开' : '折叠'}}组内所有表单项
+                </a-button>
+                <a-popconfirm
+                    title="是否确认删除?"
+                    ok-text="Yes"
+                    cancel-text="No"
+                    @confirm="deleteGroup"
+                >
+                    <a-button type="primary" danger>删除</a-button>
+                </a-popconfirm>
                 <a-button class="groupDragButton" type="primary">拖动</a-button>
             </div>
         </div>
         <draggable
+            v-show="!isFoldGroup"
             v-model="group.formItems"
             tag="div"
             class="formItemsDiv"
@@ -38,6 +59,7 @@
                     :formItemTypeMap="formItemTypeMap"
                     :allFormItemCodeArr="allFormItemCodeArr"
                     :formItemMethodParamsDependMap="formItemMethodParamsDependMap"
+                    :foldsKey="foldsKey"
                     v-model:label="formItem.label"
                     v-model:formItemCode="formItem.formItemCode"
                     v-model:type="formItem.type"
@@ -56,6 +78,8 @@
                     @delConditionLine="(conditionLineIndex) => delConditionLine(formItem, conditionLineIndex)"
                     @modelChange="modelChange"
                     @conditionValueChange="conditionValueChange"
+                    @foldOrUnFoldFormItemClick="foldOrUnFoldFormItemClick"
+                    @deleteFormItem="deleteFormItem"
                 ></VFormItem>
             </template>
         </draggable>
@@ -63,7 +87,7 @@
 </template>
 
 <script>
-import { defineComponent } from "vue";
+import {computed, defineComponent} from "vue";
 import VFormItem from "./components/VFormItem/VFormItem.vue";
 
 export default defineComponent({
@@ -90,7 +114,7 @@ export default defineComponent({
         },
         groupIndex: {
             type: Number,
-            required: true
+            required: 0
         },
         group: {
             type: Object,
@@ -108,6 +132,14 @@ export default defineComponent({
             type: Map,
             default: () => (new Map())
         },
+        foldsKey: {
+            type: Set,
+            default: () => (new Set())
+        },
+        isFoldAllInGroupFormItemKeyMap: {
+            type: Map,
+            default: () => (new Map())
+        }
     },
     emits: [
         'addOptionItem',
@@ -117,10 +149,36 @@ export default defineComponent({
         'conditionValueChange',
         'groupNameChange',
         'update:groupName',
-        'delConditionLine'
+        'delConditionLine',
+        'foldOrUnFoldFormItemClick',
+        'foldOrUnFoldGroupClick',
+        'foldOrUnFoldGroupAllFormItemClick',
+        'deleteFormItem',
+        'deleteGroup'
     ],
     setup(props, ctx) {
         const formGroupChunk = (() => {
+            const isFoldGroup = computed(() => {
+                return props.foldsKey.has(props.group.groupKey);
+            });
+            const isFoldGroupAllFormItem = computed(() => {
+                return props.isFoldAllInGroupFormItemKeyMap.get(props.group.groupKey);
+            });
+            const foldOrUnFoldGroupClick = () => {
+                ctx.emit('foldOrUnFoldFormItemClick', props.group.groupKey);
+            }
+            const foldOrUnFoldGroupAllFormItemClick = () => {
+                ctx.emit('foldOrUnFoldGroupAllFormItemClick', props.group.groupKey);
+            }
+            const foldOrUnFoldFormItemClick = (formItemKey) => {
+                ctx.emit('foldOrUnFoldFormItemClick', formItemKey);
+            };
+            const deleteFormItem = (formItemIndex) => {
+                ctx.emit('deleteFormItem', formItemIndex);
+            };
+            const deleteGroup = () => {
+                ctx.emit('deleteGroup', props.groupIndex);
+            };
             const addOptionItem = (formItem, optionItem) => {
                 ctx.emit('addOptionItem', formItem, optionItem);
             }
@@ -150,6 +208,13 @@ export default defineComponent({
                 conditionValueChange,
                 groupNameChange,
                 delConditionLine,
+                foldOrUnFoldFormItemClick,
+                isFoldGroup,
+                isFoldGroupAllFormItem,
+                foldOrUnFoldGroupClick,
+                foldOrUnFoldGroupAllFormItemClick,
+                deleteFormItem,
+                deleteGroup
             }
         })();
         
@@ -161,6 +226,13 @@ export default defineComponent({
             conditionValueChange: formGroupChunk.conditionValueChange,
             groupNameChange: formGroupChunk.groupNameChange,
             delConditionLine: formGroupChunk.delConditionLine,
+            foldOrUnFoldFormItemClick: formGroupChunk.foldOrUnFoldFormItemClick,
+            isFoldGroup: formGroupChunk.isFoldGroup,
+            isFoldGroupAllFormItem: formGroupChunk.isFoldGroupAllFormItem,
+            foldOrUnFoldGroupClick: formGroupChunk.foldOrUnFoldGroupClick,
+            foldOrUnFoldGroupAllFormItemClick: formGroupChunk.foldOrUnFoldGroupAllFormItemClick,
+            deleteFormItem: formGroupChunk.deleteFormItem,
+            deleteGroup: formGroupChunk.deleteGroup,
         }
     }
 })
@@ -184,7 +256,9 @@ export default defineComponent({
         
         }
         &>.right {
-        
+            display: flex;
+            gap: 16px;
+            align-items: center;
         }
     }
     .formItemsDiv {

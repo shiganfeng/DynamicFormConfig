@@ -2,276 +2,289 @@
     <div class="VFormItem">
         <div class="head">
             <div class="left">
-            
+                <div class="item">
+                    <a-form-item
+                        label="标题"
+                        :name="[...formItemIndexes, 'label']"
+                        :rules="[{ required: true }]"
+                    >
+                        <a-input
+                            :value="label"
+                            @update:value="labelChange"
+                            placeholder="请输入"
+                        ></a-input>
+                    </a-form-item>
+                </div>
+                <div class="item">
+                    <a-form-item
+                        label="项的提取code(可用做提取业务)"
+                        :name="[...formItemIndexes, 'formItemCode']"
+                        :rules="formItemCodeRule"
+                    >
+                        <a-input
+                            :value="formItemCode"
+                            @update:value="formItemCodeChange"
+                            placeholder="请输入"
+                        ></a-input>
+                    </a-form-item>
+                </div>
             </div>
             <div class="right">
+                <a-button
+                    :type="isFold ? 'primary' : 'default'"
+                    @click="foldOrUnFoldFormItemClick"
+                >
+                    {{isFold ? '展开' : '折叠'}}
+                </a-button>
+                <a-popconfirm
+                    title="是否确认删除?"
+                    ok-text="Yes"
+                    cancel-text="No"
+                    @confirm="deleteFormItem"
+                >
+                    <a-button type="primary" danger>删除</a-button>
+                </a-popconfirm>
                 <a-button class="formItemDragButton" type="primary">拖动</a-button>
             </div>
         </div>
-        <div class="top">
-            <div class="item">
-                <a-form-item
-                    label="标题"
-                    :name="[...formItemIndexes, 'label']"
-                    :rules="[{ required: true }]"
-                >
-                    <a-input
-                        :value="label"
-                        @update:value="labelChange"
-                        placeholder="请输入"
-                    ></a-input>
-                </a-form-item>
-            </div>
-            <div class="item">
-                <a-form-item
-                    label="项的提取code(可用做提取业务)"
-                    :name="[...formItemIndexes, 'formItemCode']"
-                    :rules="formItemCodeRule"
-                >
-                    <a-input
-                        :value="formItemCode"
-                        @update:value="formItemCodeChange"
-                        placeholder="请输入"
-                    ></a-input>
-                </a-form-item>
-            </div>
-        </div>
-        <div class="top">
-            <div class="item">
-                <a-form-item
-                    label="组件类型"
-                    :name="[...formItemIndexes, 'type']"
-                    :rules="[{ required: true }]"
-                >
-                    <a-select
-                        :value="type"
-                        placeholder="Please select"
-                        @update:value="typeChange"
-                    >
-                        <a-select-option
-                            v-for="item in componentsList"
-                            :key="item.value"
-                            :value="item.value"
-                        >{{item.label}}</a-select-option>
-                    </a-select>
-                </a-form-item>
-            </div>
-            <div class="item">
-                <a-form-item
-                    label="是否必填"
-                >
-                    <a-switch
-                        :checked="required"
-                        @change="requiredChange"
-                    ></a-switch>
-                </a-form-item>
-            </div>
-            <div class="item">
-                <a-form-item
-                    label="必填提示文字"
-                    :name="[...formItemIndexes, 'message']"
-                    :rules="messageRule"
-                >
-                    <a-input
-                        :value="message"
-                        @update:value="messageChange"
-                        placeholder="请输入"
-                    ></a-input>
-                </a-form-item>
-            </div>
-            <div class="item">
-                <a-form-item
-                    label="是否显示在表单中"
-                >
-                    <a-switch
-                        :checked="isShow"
-                        @change="isShowChange"
-                    ></a-switch>
-                </a-form-item>
-            </div>
-            <div class="item">
-                <!-- 当做一些依赖自动计算的时候用到（仅用于显示） -->
-                <a-form-item
-                    label="是否禁用"
-                >
-                    <a-switch
-                        :checked="isShowComputeValue"
-                        @change="isShowComputeValueChange"
-                    ></a-switch>
-                </a-form-item>
-            </div>
-            <div class="item">
-                <a-form-item
-                    label="是否只是用来中转的中间项"
-                >
-                    <a-switch
-                        :checked="isMiddleUse"
-                        @change="isMiddleUseChange"
-                    ></a-switch>
-                </a-form-item>
-            </div>
-        </div>
-        <div class="top">
-            <div class="item">
-                <a-form-item
-                    label="数据来源方式"
-                    :name="[...formItemIndexes, 'methodType']"
-                    :rules="methodTypeRule"
-                >
-                    <a-select
-                        :value="methodType"
-                        placeholder="Please select"
-                        @update:value="methodTypeChange"
-                    >
-                        <a-select-option
-                            v-for="item in valueSourceDict"
-                            :key="item.methodType"
-                            :value="item.methodType"
-                        >{{item.methodTypeName}}</a-select-option>
-                    </a-select>
-                </a-form-item>
-            </div>
-            <div class="item">
-                <a-form-item
-                    label="数据来源参数"
-                    :name="[...formItemIndexes, 'methodTypeParams']"
-                    :rules="methodTypeRule"
-                >
-                    <a-select
-                        :value="methodTypeParams"
-                        mode="multiple"
-                        style="width: 350px"
-                        @change="methodTypeParamsChange"
-                    >
-                        <a-select-opt-group
-                            v-for="selectGroup in formItemSelectArr"
-                            :key="selectGroup.groupKey"
-                            :label="selectGroup.groupName"
-                        >
-                            <!-- 自身不可选 -->
-                            <a-select-option
-                                v-for="selectFormItem in selectGroup.formItems"
-                                :key="selectFormItem.formItemKey"
-                                :label="selectFormItem.label"
-                                :disabled="selectFormItem.formItemKey === formItem.formItemKey || methodParamsSelectSet.has(selectFormItem.formItemKey)"
-                                :value="selectFormItem.formItemKey"
-                            >{{selectFormItem.label}}</a-select-option>
-                        </a-select-opt-group>
-                    </a-select>
-                </a-form-item>
-            </div>
-        </div>
-        <div class="content">
-            <div v-if="dynamicComponentType.includes(type)" class="line">
+        <div v-show="!isFold" class="otherCon">
+            <div class="top">
                 <div class="item">
                     <a-form-item
-                        label="动态配置选择项（例如下拉单选，下拉多选，单选框，多选框）"
+                        label="组件类型"
+                        :name="[...formItemIndexes, 'type']"
+                        :rules="[{ required: true }]"
                     >
                         <a-select
-                            placeholder="自定义下拉选项"
-                            style="width: 300px"
+                            :value="type"
+                            placeholder="Please select"
+                            @update:value="typeChange"
                         >
                             <a-select-option
-                                v-for="(item, itemIndex) in options"
-                                :key="item.code"
-                                :value="item.code"
+                                v-for="item in componentsList"
+                                :key="item.value"
+                                :value="item.value"
+                            >{{item.label}}</a-select-option>
+                        </a-select>
+                    </a-form-item>
+                </div>
+                <div class="item">
+                    <a-form-item
+                        label="是否必填"
+                    >
+                        <a-switch
+                            :checked="required"
+                            @change="requiredChange"
+                        ></a-switch>
+                    </a-form-item>
+                </div>
+                <div class="item">
+                    <a-form-item
+                        label="必填提示文字"
+                        :name="[...formItemIndexes, 'message']"
+                        :rules="messageRule"
+                    >
+                        <a-input
+                            :value="message"
+                            @update:value="messageChange"
+                            placeholder="请输入"
+                        ></a-input>
+                    </a-form-item>
+                </div>
+                <div class="item">
+                    <a-form-item
+                        label="是否显示在表单中"
+                    >
+                        <a-switch
+                            :checked="isShow"
+                            @change="isShowChange"
+                        ></a-switch>
+                    </a-form-item>
+                </div>
+                <div class="item">
+                    <!-- 当做一些依赖自动计算的时候用到（仅用于显示） -->
+                    <a-form-item
+                        label="是否禁用"
+                    >
+                        <a-switch
+                            :checked="isShowComputeValue"
+                            @change="isShowComputeValueChange"
+                        ></a-switch>
+                    </a-form-item>
+                </div>
+                <div class="item">
+                    <a-form-item
+                        label="是否只是用来中转的中间项"
+                    >
+                        <a-switch
+                            :checked="isMiddleUse"
+                            @change="isMiddleUseChange"
+                        ></a-switch>
+                    </a-form-item>
+                </div>
+            </div>
+            <div class="top">
+                <div class="item">
+                    <a-form-item
+                        label="数据来源方式"
+                        :name="[...formItemIndexes, 'methodType']"
+                        :rules="methodTypeRule"
+                    >
+                        <a-select
+                            :value="methodType"
+                            placeholder="Please select"
+                            @update:value="methodTypeChange"
+                        >
+                            <a-select-option
+                                v-for="item in valueSourceDict"
+                                :key="item.methodType"
+                                :value="item.methodType"
+                            >{{item.methodTypeName}}</a-select-option>
+                        </a-select>
+                    </a-form-item>
+                </div>
+                <div class="item">
+                    <a-form-item
+                        label="数据来源参数"
+                        :name="[...formItemIndexes, 'methodTypeParams']"
+                        :rules="methodTypeRule"
+                    >
+                        <a-select
+                            :value="methodTypeParams"
+                            mode="multiple"
+                            style="width: 350px"
+                            @change="methodTypeParamsChange"
+                        >
+                            <a-select-opt-group
+                                v-for="selectGroup in formItemSelectArr"
+                                :key="selectGroup.groupKey"
+                                :label="selectGroup.groupName"
                             >
-                                <div class="customOptionItem">
-                                    <div class="text">{{item.label}}</div>
-                                    <div class="del" @click.stop="deleteOptionItem(itemIndex)">
-                                        <CloseCircleOutlined />
-                                    </div>
-                                </div>
-                            </a-select-option>
-                            <template #dropdownRender="{ menuNode: menu }">
-                                <v-nodes :vnodes="menu" />
-                                <a-divider style="margin: 4px 0" />
-                                <a-space style="padding: 4px 8px">
-                                    <a-input ref="inputRef" v-model:value="addOptionItemLabel" placeholder="增加选项" />
-                                    <a-button type="text" @click="addOptionItem">
-                                        <template #icon>
-                                            <plus-outlined />
-                                        </template>
-                                        增加选项
-                                    </a-button>
-                                </a-space>
-                            </template>
+                                <!-- 自身不可选 -->
+                                <a-select-option
+                                    v-for="selectFormItem in selectGroup.formItems"
+                                    :key="selectFormItem.formItemKey"
+                                    :label="selectFormItem.label"
+                                    :disabled="selectFormItem.formItemKey === formItem.formItemKey || methodParamsSelectSet.has(selectFormItem.formItemKey)"
+                                    :value="selectFormItem.formItemKey"
+                                >{{selectFormItem.label}}</a-select-option>
+                            </a-select-opt-group>
                         </a-select>
                     </a-form-item>
                 </div>
             </div>
-            <div class="lineGroup">
-                <div class="label">显示当前表单项的条件（例如其他的表单项选择了特定的值才显示）：</div>
-                <div class="lineCon">
-                    <div class="top">
+            <div class="content">
+                <div v-if="dynamicComponentType.includes(type)" class="line">
+                    <div class="item">
                         <a-form-item
-                            label="选定项直接的条件关系"
-                            :name="[...formItemIndexes, 'conditionStruct', 'relation']"
-                            :rules="[{ required: true }]"
+                            label="动态配置选择项（例如下拉单选，下拉多选，单选框，多选框）"
                         >
                             <a-select
-                                :value="relation"
-                                placeholder="Please select"
-                                @update:value="relationChange"
+                                placeholder="自定义下拉选项"
+                                style="width: 300px"
                             >
                                 <a-select-option
-                                    v-for="item in relationList"
-                                    :key="item.value"
-                                    :value="item.value"
-                                >{{item.label}}</a-select-option>
+                                    v-for="(item, itemIndex) in options"
+                                    :key="item.code"
+                                    :value="item.code"
+                                >
+                                    <div class="customOptionItem">
+                                        <div class="text">{{item.label}}</div>
+                                        <div class="del" @click.stop="deleteOptionItem(itemIndex)">
+                                            <CloseCircleOutlined />
+                                        </div>
+                                    </div>
+                                </a-select-option>
+                                <template #dropdownRender="{ menuNode: menu }">
+                                    <v-nodes :vnodes="menu" />
+                                    <a-divider style="margin: 4px 0" />
+                                    <a-space style="padding: 4px 8px">
+                                        <a-input ref="inputRef" v-model:value="addOptionItemLabel" placeholder="增加选项" />
+                                        <a-button type="text" @click="addOptionItem">
+                                            <template #icon>
+                                                <plus-outlined />
+                                            </template>
+                                            增加选项
+                                        </a-button>
+                                    </a-space>
+                                </template>
                             </a-select>
                         </a-form-item>
                     </div>
-                    <div
-                        v-for="(conditionLine, conditionLineIndex) in formItem.conditionStruct.conditionList"
-                        :key="conditionLine.conditionKey"
-                        class="line"
-                    >
-                        <div class="item">
+                </div>
+                <div class="lineGroup">
+                    <div class="label">显示当前表单项的条件（例如其他的表单项选择了特定的值才显示）：</div>
+                    <div class="lineCon">
+                        <div class="top">
                             <a-form-item
-                                :label="`条件${conditionLineIndex + 1}`"
-                                :name="[...formItemIndexes, 'conditionStruct', 'conditionList', conditionLineIndex, 'model']"
+                                label="选定项直接的条件关系"
+                                :name="[...formItemIndexes, 'conditionStruct', 'relation']"
                                 :rules="[{ required: true }]"
                             >
                                 <a-select
-                                    :value="conditionLine.model"
-                                    style="width: 350px"
-                                    @change="(value) => modelChange(conditionLine, value)"
+                                    :value="relation"
+                                    placeholder="Please select"
+                                    @update:value="relationChange"
                                 >
-                                    <a-select-opt-group
-                                        v-for="selectGroup in formItemSelectArr"
-                                        :key="selectGroup.groupKey"
-                                        :label="selectGroup.groupName"
-                                    >
-                                        <!-- 自身不可选 -->
-                                        <a-select-option
-                                            v-for="selectFormItem in selectGroup.formItems"
-                                            :key="selectFormItem.formItemKey"
-                                            :label="selectFormItem.label"
-                                            :disabled="selectFormItem.formItemKey === formItem.formItemKey"
-                                            :value="selectFormItem.formItemKey"
-                                        >{{selectFormItem.label}}</a-select-option>
-                                    </a-select-opt-group>
+                                    <a-select-option
+                                        v-for="item in relationList"
+                                        :key="item.value"
+                                        :value="item.value"
+                                    >{{item.label}}</a-select-option>
                                 </a-select>
                             </a-form-item>
                         </div>
-                        <div v-if="conditionLine.model && !conditionLine.modelMiddleUse" class="item">
-                            <a-form-item
-                                label="选择了前面特定表单项的值"
-                                :name="[...formItemIndexes, 'conditionStruct', 'conditionList', conditionLineIndex, 'conditionValue']"
-                                :rules="[{ required: true }]"
-                            >
-                                <component
-                                    :is="transFormType(conditionLine.model).type"
-                                    :value="conditionLine.conditionValue"
-                                    :options="transFormType(conditionLine.model).options"
-                                    @update:value="(value) => conditionValueChange(conditionLine, value)"
-                                ></component>
-                            </a-form-item>
+                        <div
+                            v-for="(conditionLine, conditionLineIndex) in formItem.conditionStruct.conditionList"
+                            :key="conditionLine.conditionKey"
+                            class="line"
+                        >
+                            <div class="item">
+                                <a-form-item
+                                    :label="`条件${conditionLineIndex + 1}`"
+                                    :name="[...formItemIndexes, 'conditionStruct', 'conditionList', conditionLineIndex, 'model']"
+                                    :rules="[{ required: true }]"
+                                >
+                                    <a-select
+                                        :value="conditionLine.model"
+                                        style="width: 350px"
+                                        @change="(value) => modelChange(conditionLine, value)"
+                                    >
+                                        <a-select-opt-group
+                                            v-for="selectGroup in formItemSelectArr"
+                                            :key="selectGroup.groupKey"
+                                            :label="selectGroup.groupName"
+                                        >
+                                            <!-- 自身不可选 -->
+                                            <a-select-option
+                                                v-for="selectFormItem in selectGroup.formItems"
+                                                :key="selectFormItem.formItemKey"
+                                                :label="selectFormItem.label"
+                                                :disabled="selectFormItem.formItemKey === formItem.formItemKey"
+                                                :value="selectFormItem.formItemKey"
+                                            >{{selectFormItem.label}}</a-select-option>
+                                        </a-select-opt-group>
+                                    </a-select>
+                                </a-form-item>
+                            </div>
+                            <div v-if="conditionLine.model && !conditionLine.modelMiddleUse" class="item">
+                                <a-form-item
+                                    label="选择了前面特定表单项的值"
+                                    :name="[...formItemIndexes, 'conditionStruct', 'conditionList', conditionLineIndex, 'conditionValue']"
+                                    :rules="[{ required: true }]"
+                                >
+                                    <component
+                                        :is="transFormType(conditionLine.model).type"
+                                        :value="conditionLine.conditionValue"
+                                        :options="transFormType(conditionLine.model).options"
+                                        @update:value="(value) => conditionValueChange(conditionLine, value)"
+                                    ></component>
+                                </a-form-item>
+                            </div>
+                            <a-button type="primary" danger @click="delConditionLine(conditionLineIndex)">删除</a-button>
                         </div>
-                        <a-button type="primary" danger @click="delConditionLine(conditionLineIndex)">删除</a-button>
+                        <a-button type="primary" @click="addConditionLine">添加条件项</a-button>
                     </div>
-                    <a-button type="primary" @click="addConditionLine">添加条件项</a-button>
                 </div>
             </div>
         </div>
@@ -316,6 +329,10 @@ export default defineComponent({
         VSwitch,
     },
     props: {
+        foldsKey: {
+            type: Set,
+            default: () => (new Set())
+        },
         formItemMethodParamsDependMap: {
             type: Map,
             default: () => new Map()
@@ -323,6 +340,10 @@ export default defineComponent({
         allFormItemCodeArr: {
             type: Array,
             default: () => ([]),  
+        },
+        formItemIndex: {
+            type: Number,
+            default: 0
         },
         formItemIndexes: {
             type: Array,
@@ -434,6 +455,8 @@ export default defineComponent({
         'delConditionLine',
         'modelChange',
         'conditionValueChange',
+        'foldOrUnFoldFormItemClick',
+        'deleteFormItem'
     ],
     setup(props, ctx) {
         const transFormType = (model) => {
@@ -443,6 +466,12 @@ export default defineComponent({
             })
         }
         const formItemChunk = (() => {
+            const deleteFormItem = () => {
+                ctx.emit('deleteFormItem', props.formItemIndex);
+            };
+            const foldOrUnFoldFormItemClick = () => {
+                ctx.emit('foldOrUnFoldFormItemClick', props.formItem.formItemKey);
+            };
             const labelChange = (value) => {
                 ctx.emit('update:label', value);
             };
@@ -582,7 +611,11 @@ export default defineComponent({
                     trigger: ['change', 'blur'],
                 }
             ];
+            const isFold = computed(() => {
+                return props.foldsKey.has(props.formItem.formItemKey);
+            });
             return {
+                deleteFormItem,
                 labelChange,
                 formItemCodeChange,
                 typeChange,
@@ -605,7 +638,9 @@ export default defineComponent({
                 messageRule,
                 formItemCodeRule,
                 methodTypeRule,
-                methodParamsSelectSet
+                methodParamsSelectSet,
+                isFold,
+                foldOrUnFoldFormItemClick
             }
         })();
         
@@ -616,6 +651,7 @@ export default defineComponent({
             relationList,
             valueSourceDict,
             dynamicComponentType,
+            deleteFormItem: formItemChunk.deleteFormItem,
             labelChange: formItemChunk.labelChange,
             formItemCodeChange: formItemChunk.formItemCodeChange,
             typeChange: formItemChunk.typeChange,
@@ -639,6 +675,8 @@ export default defineComponent({
             formItemCodeRule: formItemChunk.formItemCodeRule,
             methodTypeRule: formItemChunk.methodTypeRule,
             methodParamsSelectSet: formItemChunk.methodParamsSelectSet,
+            isFold: formItemChunk.isFold,
+            foldOrUnFoldFormItemClick: formItemChunk.foldOrUnFoldFormItemClick,
         }
     }
 })
@@ -670,37 +708,24 @@ export default defineComponent({
         justify-content: space-between;
         align-items: center;
         &>.left {
-        
+            display: flex;
+            gap: 32px;
+            align-items: center;
         }
         &>.right {
             display: flex;
+            gap: 16px;
             align-items: center;
         }
     }
-    &>.top {
-        width: 100%;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 32px;
-        &>.item {
-            display: flex;
-            align-items: center;
-            .ant-input {
-                width: 180px;
-            }
-            .ant-select {
-                width: 180px;
-            }
-        }
-    }
-    &>.content {
+    &>.otherCon {
         width: 100%;
         display: flex;
         flex-direction: column;
-        gap: 16px;
-        &>.line {
+        &>.top {
             width: 100%;
             display: flex;
+            flex-wrap: wrap;
             gap: 32px;
             &>.item {
                 display: flex;
@@ -713,31 +738,52 @@ export default defineComponent({
                 }
             }
         }
-        &>.lineGroup {
+        &>.content {
             width: 100%;
             display: flex;
-            align-items: baseline;
-            &>.lineCon {
-                width: 0;
-                flex: 1 0 auto;
+            flex-direction: column;
+            gap: 16px;
+            &>.line {
+                width: 100%;
                 display: flex;
-                gap: 16px;
-                flex-direction: column;
-                padding: 8px;
-                background-color: #FFB733;
-                border-radius: 8px;
-                &>.top {
+                gap: 32px;
+                &>.item {
                     display: flex;
                     align-items: center;
+                    .ant-input {
+                        width: 180px;
+                    }
+                    .ant-select {
+                        width: 180px;
+                    }
                 }
-                &>.line {
-                    width: 100%;
+            }
+            &>.lineGroup {
+                width: 100%;
+                display: flex;
+                align-items: baseline;
+                &>.lineCon {
+                    width: 0;
+                    flex: 1 0 auto;
                     display: flex;
                     gap: 16px;
-                    align-items: flex-start;
-                    &>.item {
-                        &>.ant-form-item {
-                            //margin-bottom: 0;
+                    flex-direction: column;
+                    padding: 8px;
+                    background-color: #FFB733;
+                    border-radius: 8px;
+                    &>.top {
+                        display: flex;
+                        align-items: center;
+                    }
+                    &>.line {
+                        width: 100%;
+                        display: flex;
+                        gap: 16px;
+                        align-items: flex-start;
+                        &>.item {
+                            &>.ant-form-item {
+                                //margin-bottom: 0;
+                            }
                         }
                     }
                 }

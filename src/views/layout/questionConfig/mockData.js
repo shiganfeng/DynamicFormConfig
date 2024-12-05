@@ -648,6 +648,37 @@ function createFormItemMap(formStruct) {
         allFormItemCodeArr
     }
 }
+// 所有key-Map
+function createAllKey(formStruct) {
+    const { groups } = formStruct;
+    // 组的groupKey
+    const allGroupKeySet = new Set();
+    // 所有组内的formItemKey
+    const allFormItemKeySet = new Set();
+    // 以组的groupKey为key，这个组内的所有表单项的formItemKey为值，形成一个Map
+    const allGroupFormItemKeyMap = new Map();
+    groups.forEach(group => {
+        allGroupKeySet.add(group.groupKey);
+        let currentGroupFormItemsKeySet = allGroupFormItemKeyMap.get(group.groupKey);
+        if (!currentGroupFormItemsKeySet) {
+            currentGroupFormItemsKeySet = new Set();
+            allGroupFormItemKeyMap.set(group.groupKey, currentGroupFormItemsKeySet);
+        }
+
+        group.formItems.forEach(formItem => {
+            currentGroupFormItemsKeySet.add(formItem.formItemKey);
+            allFormItemKeySet.add(formItem.formItemKey);
+        })
+    });
+    console.log('allGroupKeySet:', allGroupKeySet);
+    console.log('allFormItemKeySet:', allFormItemKeySet);
+    console.log('allGroupFormItemKeyMap:', allGroupFormItemKeyMap);
+    return {
+        allGroupKeySet,
+        allFormItemKeySet,
+        allGroupFormItemKeyMap
+    }
+}
 
 // 计算每一个表单项的计算依赖
 function createFormItemDependMap(formStruct) {
@@ -957,5 +988,6 @@ export {
     createFormItemDependMap,
     updateMockData,
     createConditionLine,
-    computeIsShowFormItem
+    computeIsShowFormItem,
+    createAllKey
 }
