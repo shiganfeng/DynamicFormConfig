@@ -83,16 +83,24 @@
                 ></VFormItem>
             </template>
         </draggable>
+        <div class="bottom">
+            <div class="addCon" @click="addFormItem">
+                <PlusOutlined />
+                <div class="text">添加表单项</div>
+            </div>
+        </div>
     </div>
 </template>
 
 <script>
 import {computed, defineComponent} from "vue";
+import { PlusOutlined } from '@ant-design/icons-vue';
 import VFormItem from "./components/VFormItem/VFormItem.vue";
 
 export default defineComponent({
     components: {
-        VFormItem
+        VFormItem,
+        PlusOutlined
     },
     props: {
         formItemMethodParamsDependMap: {
@@ -154,6 +162,7 @@ export default defineComponent({
         'foldOrUnFoldGroupClick',
         'foldOrUnFoldGroupAllFormItemClick',
         'deleteFormItem',
+        'addFormItem',
         'deleteGroup'
     ],
     setup(props, ctx) {
@@ -172,6 +181,9 @@ export default defineComponent({
             }
             const foldOrUnFoldFormItemClick = (formItemKey) => {
                 ctx.emit('foldOrUnFoldFormItemClick', formItemKey);
+            };
+            const addFormItem = () => {
+                ctx.emit('addFormItem');
             };
             const deleteFormItem = (formItemIndex) => {
                 ctx.emit('deleteFormItem', formItemIndex);
@@ -214,7 +226,8 @@ export default defineComponent({
                 foldOrUnFoldGroupClick,
                 foldOrUnFoldGroupAllFormItemClick,
                 deleteFormItem,
-                deleteGroup
+                deleteGroup,
+                addFormItem
             }
         })();
         
@@ -233,6 +246,7 @@ export default defineComponent({
             foldOrUnFoldGroupAllFormItemClick: formGroupChunk.foldOrUnFoldGroupAllFormItemClick,
             deleteFormItem: formGroupChunk.deleteFormItem,
             deleteGroup: formGroupChunk.deleteGroup,
+            addFormItem: formGroupChunk.addFormItem,
         }
     }
 })
@@ -259,6 +273,25 @@ export default defineComponent({
             display: flex;
             gap: 16px;
             align-items: center;
+        }
+    }
+    &>.bottom {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 16px;
+        &>.addCon {
+            width: 100%;
+            padding: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: dashed 2px gray;
+            cursor: pointer;
+            &>.text {
+                margin-left: 4px;
+            }
         }
     }
     .formItemsDiv {

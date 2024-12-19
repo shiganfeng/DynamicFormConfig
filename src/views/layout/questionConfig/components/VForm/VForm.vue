@@ -60,19 +60,28 @@
                         @foldOrUnFoldGroupAllFormItemClick="foldOrUnFoldGroupAllFormItemClick"
                         @deleteFormItem="(formItemIndex) => deleteFormItem(group, formItemIndex)"
                         @deleteGroup="deleteGroup"
+                        @addFormItem="() => addFormItem(group)"
                     ></VGroup>
                 </template>
             </draggable>
         </a-form>
+        <div class="bottom">
+            <div class="addCon" @click="addGroup">
+                <PlusOutlined />
+                <div class="text">添加分组</div>
+            </div>
+        </div>
     </div>
 </template>
 
 <script>
 import { defineComponent, ref } from "vue";
 import VGroup from "./components/VGroup/VGroup.vue";
+import {PlusOutlined} from "@ant-design/icons-vue";
 
 export default defineComponent({
     components: {
+        PlusOutlined,
         VGroup
     },
     props: {
@@ -134,7 +143,9 @@ export default defineComponent({
         'foldOrUnFoldAllGroupClick',
         'foldOrUnFoldAllFormItemClick',
         'deleteFormItem',
-        'deleteGroup'
+        'deleteGroup',
+        'addFormItem',
+        'addGroup'
     ],
     setup(props, ctx) {
         const formChunk = (() => {
@@ -157,8 +168,14 @@ export default defineComponent({
             const deleteFormItem = (group, formItemIndex) => {
                 ctx.emit('deleteFormItem', group, formItemIndex);
             };
+            const addFormItem = (group) => {
+                ctx.emit('addFormItem', group);
+            };
             const deleteGroup = (groupIndex) => {
                 ctx.emit('deleteGroup', groupIndex);
+            };
+            const addGroup = () => {
+                ctx.emit('addGroup');
             };
             const addOptionItem = (formItem, optionItem) => {
                 ctx.emit('addOptionItem', formItem, optionItem);
@@ -192,7 +209,9 @@ export default defineComponent({
                 foldOrUnFoldAllGroupClick,
                 foldOrUnFoldAllFormItemClick,
                 deleteFormItem,
-                deleteGroup
+                deleteGroup,
+                addFormItem,
+                addGroup
             }
         })();
         
@@ -211,6 +230,8 @@ export default defineComponent({
             foldOrUnFoldAllFormItemClick: formChunk.foldOrUnFoldAllFormItemClick,
             deleteFormItem: formChunk.deleteFormItem,
             deleteGroup: formChunk.deleteGroup,
+            addFormItem: formChunk.addFormItem,
+            addGroup: formChunk.addGroup,
         }
     }
 })
@@ -237,6 +258,26 @@ export default defineComponent({
             display: flex;
             gap: 16px;
             align-items: center;
+        }
+    }
+    &>.bottom {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 16px;
+        &>.addCon {
+            width: 100%;
+            padding: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: dashed 2px #1677ff;
+            cursor: pointer;
+            color: #1677ff;
+            &>.text {
+                margin-left: 4px;
+            }
         }
     }
     .groups {

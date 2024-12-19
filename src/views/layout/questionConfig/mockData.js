@@ -595,6 +595,35 @@ function createConditionLine() {
         modelMiddleUse: false,
     }
 }
+function createGroup() {
+    return {
+        groupName: '',
+        groupKey: createUniqueKey('groupKey'),
+        formItems: []
+    }
+}
+function createFormItem() {
+    return {
+        formItemKey: createUniqueKey('formItemKey'), // 应该自动生成
+        formItemCode: createUniqueKey('formItemCode'), // 默认自动生成
+        label: '',
+        methodType: '', // 数据来源方式
+        methodTypeParams: [], // 数据来源参数
+        type: 'VInput', // 下拉选择组件
+        required: true, // 校验是否必填
+        isShow: true, // 是否显示在前台
+        isShowComputeValue: false, // 是否只是用来显示计算出来的值
+        isMiddleUse: false, // 是否只是用来中转的中间项
+        message: '', // 校验时候的信息
+        conditionStruct: {
+            relation: '&',
+            conditionList: []
+        },
+        formItemStruct: {
+            options: [],
+        }
+    }
+}
 function updateMockData (formStruct) {
     mockData = formStruct;
     // sessionStorage.setItem('questionFormConfig', JSON.stringify(mockData));
@@ -989,5 +1018,7 @@ export {
     updateMockData,
     createConditionLine,
     computeIsShowFormItem,
-    createAllKey
+    createAllKey,
+    createGroup,
+    createFormItem
 }

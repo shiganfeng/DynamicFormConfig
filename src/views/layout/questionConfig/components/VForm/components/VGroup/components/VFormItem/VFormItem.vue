@@ -281,7 +281,14 @@
                                     ></component>
                                 </a-form-item>
                             </div>
-                            <a-button type="primary" danger @click="delConditionLine(conditionLineIndex)">删除</a-button>
+                            <a-popconfirm
+                                title="是否确认删除?"
+                                ok-text="Yes"
+                                cancel-text="No"
+                                @confirm="delConditionLine(conditionLineIndex)"
+                            >
+                                <a-button type="primary" danger>删除</a-button>
+                            </a-popconfirm>
                         </div>
                         <a-button type="primary" @click="addConditionLine">添加条件项</a-button>
                     </div>
@@ -362,7 +369,7 @@ export default defineComponent({
             type: Object,
             default: () => ({
                 formItemKey: '', // 应该自动生成
-                code: '',
+                formItemCode: '',
                 label: '', // 手动输入
                 type: '', // 下拉选择组件
                 required: true, // 校验是否必填
@@ -374,13 +381,7 @@ export default defineComponent({
                 message: '', // 校验时候的信息
                 conditionStruct: {
                     relation: '&',
-                    conditionList: [
-                        {
-                            conditionKey: '',
-                            model: '', // 字段名（这里用的是formItemKey的值）
-                            conditionValue: '', // 这个字段的值
-                        }
-                    ]
+                    conditionList: []
                 },
                 formItemStruct: {
                     options: []
@@ -566,10 +567,10 @@ export default defineComponent({
             });
             // 判断表单项code是否重复
             const isDuplication = computed( () => {
-                console.log('allFormItemCodeArr3333:', props.allFormItemCodeArr);
+                // console.log('allFormItemCodeArr3333:', props.allFormItemCodeArr);
                 let num = 0;
                 for(let i = 0; i < props.allFormItemCodeArr.length; i++) {
-                    console.log(7777, props.allFormItemCodeArr[i], props.formItemCode)
+                    // console.log(7777, props.allFormItemCodeArr[i], props.formItemCode)
                     if (props.allFormItemCodeArr[i] === props.formItemCode) {
                         num++;
                         if (num >= 2) {
@@ -577,7 +578,7 @@ export default defineComponent({
                         }
                     }
                 }
-                console.log('num:', num)
+                // console.log('num:', num)
                 return num >= 2;
             });
             const methodTypeRule = computed(() => {

@@ -13,7 +13,9 @@
                 :isFoldAllGroup="isFoldAllGroup"
                 :isFoldAllFormItem="isFoldAllFormItem"
                 @deleteFormItem="deleteFormItem"
+                @addFormItem="addFormItem"
                 @deleteGroup="deleteGroup"
+                @addGroup="addGroup"
                 @addOptionItem="addOptionItem"
                 @deleteOptionItem="deleteOptionItem"
                 @addConditionLine="addConditionLine"
@@ -45,7 +47,9 @@ import {
     updateMockData,
     createConditionLine,
     dynamicComponentType,
-    createAllKey
+    createAllKey,
+    createFormItem,
+    createGroup
 } from "./mockData.js";
 import {message} from "ant-design-vue";
 
@@ -86,8 +90,14 @@ export default defineComponent({
             const deleteFormItem = (group, formItemIndex) => {
                 group.formItems.splice(formItemIndex, 1);
             };
+            const addFormItem = (group) => {
+                group.formItems.push(createFormItem());
+            };
             const deleteGroup = (groupIndex) => {
                 formStruct.value.groups.splice(groupIndex, 1);
+            };
+            const addGroup = () => {
+                formStruct.value.groups.push(createGroup());
             };
             const addOptionItem = (formItem, optionItem) => {
                 formItem.formItemStruct.options.push(optionItem);
@@ -180,7 +190,9 @@ export default defineComponent({
                 formOptionsGroups,
                 formItemMethodParamsDependMap,
                 deleteFormItem,
+                addFormItem,
                 deleteGroup,
+                addGroup,
                 addOptionItem,
                 deleteOptionItem,
                 addConditionLine,
@@ -329,7 +341,9 @@ export default defineComponent({
             formOptionsGroups: formConfigChunk.formOptionsGroups,
             formItemMethodParamsDependMap: formConfigChunk.formItemMethodParamsDependMap,
             deleteFormItem: formConfigChunk.deleteFormItem,
+            addFormItem: formConfigChunk.addFormItem,
             deleteGroup: formConfigChunk.deleteGroup,
+            addGroup: formConfigChunk.addGroup,
             addOptionItem: formConfigChunk.addOptionItem,
             deleteOptionItem: formConfigChunk.deleteOptionItem,
             addConditionLine: formConfigChunk.addConditionLine,
